@@ -1,0 +1,10 @@
+[build-system]
+requires = ["setuptools>=70.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Tasty"
+version = "0.1.0"
+description = "Tasty is a smart web platform that helps undecided users choose meals and establishments based on their preferences, location, and budget – continuously improving suggestions based on user interactions. The solution is accessible via a web address, offering convenience and real-time personalization."
+readme = "README.md"
+requires-python = ""
