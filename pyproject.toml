@@ -3,8 +3,48 @@ requires = ["setuptools>=70.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Tasty"
+name = "tasty"
 version = "0.1.0"
-description = "Tasty is a smart web platform that helps undecided users choose meals and establishments based on their preferences, location, and budget – continuously improving suggestions based on user interactions. The solution is accessible via a web address, offering convenience and real-time personalization."
+description = "Tasty is a smart web platform that helps undecided users choose meals and establishments based on their preferences, location, and budget."
 readme = "README.md"
-requires-python = ""
+requires-python = ">=3.9"
+license = { text = "MIT" }
+
+authors = [
+    { name = "Brenno Gomes Breda", email = "brenno.breda@icloud.com" },
+    { name = "Daphne Rocha Amigo", email = "daphne.amigo@uvvnet.com.br" }
+]
+
+dependencies = [
+    "Flask",
+    "python-dotenv",
+    "flask-wtf",
+    "email-validator",
+    "flask-sqlalchemy"
+]
+
+[project.optional-dependencies]
+dev = [
+    "ipython",
+    "black",
+    "flake8",
+    "flask-debugtoolbar>=0.15"
+]
+
+test = [
+    "pytest>=8.3",
+    "pytest-cov>=5.0",
+    "pytest-flask"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tasty*"]
+exclude = ["tests*", "docs*"]

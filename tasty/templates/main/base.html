@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                primary: '#ff7a00',
+                'primary-dark': '#e66d00',
+                dark: '#1a1a1a',
+                darker: '#222222'
+              }
+            }
+          }
+        }
+    </script>
+
+    <title>{% block title %} Tasty {% endblock %}</title>
+    {% endblock %}
+</head>
+<body class="bg-gray-100 text-gray-800">
+    {% block content %}
+    <h1>Hello World</h1>
+    {% endblock %}
+    
+</body>
+</html>
