@@ -1,19 +1,14 @@
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import func, ForeignKey, Integer, String, Boolean, DateTime
+from sqlalchemy import func, Integer, String, Boolean, DateTime
 from tasty.ext.db import db
 
 if TYPE_CHECKING:
     from .user import User
-    from .businesshastype import BusinessHasType
-    from .businessowner import BusinessOwner
     from .address import Address
-    from .businesstype import Businesstype
-
-# ----------------------------------------------------------
-# level
-# ----------------------------------------------------------
+    from .business_type import BusinessType
+    from .photo import Photo
 
 class Business(db.Model):
     __tablename__ = "businesses"
@@ -27,29 +22,28 @@ class Business(db.Model):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     
-    # RELACAO N:N REAL
-    # Agora uma empresa pode ter uma lista de owners
-    owners: Mapped[list["User"]] = relationship(
-        "User",
-        secondary="business_owners",
-        back_populates="owned_businesses"
+    # Colunas da imagem
+    opening_time: Mapped[Optional[str]] = mapped_column(String(45))
+    closing_time: Mapped[Optional[str]] = mapped_column(String(45))
+
+    # Relacionamento com Endereço (1:N caso tenha múltiplos no futuro, mas configurado com uselist=False para 1:1 caso deseje)
+    addresses: Mapped[List["Address"]] = relationship(
+        "Address", back_populates="business", cascade="all, delete-orphan"
     )
 
-    # Relacionamento com Endereço (1:1)
-    # Cascade garante que se a empresa sumir, o endereço dela também some.
-    address: Mapped[Optional["Address"]] = relationship(
-        "Address",
-        back_populates="business",
-        cascade="all, delete-orphan",
-        uselist=False
+    # Relacionamento com Fotos (1:N)
+    photos: Mapped[List["Photo"]] = relationship(
+        "Photo", back_populates="business", cascade="all, delete-orphan"
     )
 
-    # N : N FAZER
+    # N:N com Users (Donos)
+    owners: Mapped[List["User"]] = relationship(
+        "User", secondary="business_owners", back_populates="owned_businesses"
+    )
 
-    business_type: Mapped[List["Businesstype"]] = relationship(
-        "BusinessType",
-        secondary="businesshastype",
-        back_populates="businessesHasType",
+    # N:N com BusinessTypes
+    business_types: Mapped[List["BusinessType"]] = relationship(
+        "BusinessType", secondary="business_has_type", back_populates="businesses"
     )
 
     def __repr__(self) -> str:
