@@ -12,7 +12,8 @@ license = { text = "MIT" }
 
 authors = [
     { name = "Brenno Gomes Breda", email = "brenno.breda@icloud.com" },
-    { name = "Daphne Rocha Amigo", email = "daphne.amigo@uvvnet.com.br" }
+    { name = "Daphne Rocha Amigo", email = "daphne.amigo@uvvnet.com.br" },
+    { name = "Rafael Souza da Silva", email = "falecomigo.rafaels@gmail.com" }
 ]
 
 dependencies = [
