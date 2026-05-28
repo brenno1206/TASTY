@@ -13,6 +13,7 @@ class BusinessType(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(45), nullable=False)
+    emoji: Mapped[str | None] = mapped_column(String(10)) # HTML
     description: Mapped[str | None] = mapped_column(String(255))
 
     # N:N

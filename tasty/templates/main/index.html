@@ -1,10 +1,95 @@
 {% extends 'main/base.html' %}
 
-{% block title %}Tasty - Home {% endblock %}
+{% block title %}Tasty - Encontre seu próximo Match Gastronômico{% endblock %}
 
 {% block content %}
+{% include 'main/partials/navbar.html' %}
 
-<h1>Se cadaste no app e conheça seu novo restaurante favorito</h1>
-<h3>Você consegue encontrar rapidamente os estabelecimentos com suas comidas favoritas</h3>
+<main class="min-h-screen">
+    <section class="relative bg-darker py-20 px-6 overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl"></div>
+        
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between relative z-10">
+            <div class="md:w-1/2 text-center md:text-left mb-12 md:mb-0">
+                <span class="text-primary font-bold tracking-widest uppercase text-sm">Deslize, Coma, Ame.</span>
+                <h1 class="text-5xl md:text-7xl font-extrabold text-white mt-4 leading-tight">
+                    Seu próximo <span class="text-primary font-serif italic">Match</span> é aqui.
+                </h1>
+                <p class="text-gray-400 mt-6 text-lg max-w-md">
+                    O Tasty ajuda você a encontrar os melhores restaurantes da cidade de um jeito divertido. Deu vontade? É só deslizar!
+                </p>
+                <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="/explore" class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 text-center shadow-lg shadow-primary/20">
+                        Começar a explorar
+                    </a>
+                    <a href="#como-funciona" class="border border-gray-600 text-gray-300 hover:bg-gray-800 px-8 py-4 rounded-full font-bold text-lg transition-all text-center">
+                        Como funciona?
+                    </a>
+                </div>
+            </div>
 
+            <div class="md:w-1/2 flex justify-center relative">
+                <div class="relative w-72 h-[450px] bg-white rounded-[2rem] shadow-2xl border-8 border-dark overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=1000" class="w-full h-2/3 object-cover" alt="Pizza">
+                    <div class="p-6">
+                        <h4 class="text-xl font-bold">Pizza del Fuoco &#127829;</h4>
+                        <p class="text-sm text-gray-500">A 2km de você</p>
+                        <div class="flex gap-2 mt-4">
+                            <div class="w-10 h-10 rounded-full border-2 border-red-500 flex items-center justify-center text-red-500 font-bold italic">X</div>
+                            <div class="w-10 h-10 rounded-full border-2 border-green-500 flex items-center justify-center text-green-500 font-bold">♥</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="absolute -z-10 w-72 h-[450px] bg-gray-300 rounded-[2rem] shadow-xl transform -rotate-6 translate-x-4 opacity-50"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 max-w-7xl mx-auto px-6">
+        <h2 class="text-3xl font-bold mb-8">O que você está desejando hoje?</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <!-- MUDAR PRA PEGAR OS TIPOS DO BD -->
+            {% set categorias = [
+                {'name': 'Hamburgueria', 'icon': '🍔'},
+                {'name': 'Pizzaria', 'icon': '🍕'},
+                {'name': 'Comida Japonesa', 'icon': '🍣'},
+                {'name': 'Cozinha italiana', 'icon': '🍝'},
+                {'name': 'Restaurante Vegano', 'icon': '🌿'},
+                {'name': 'Doceria', 'icon': '🍩'}
+            ] %}
+            
+            {% for cat in categorias %}
+            <a href="/category/{{ cat.name|lower }}" class="group bg-white p-6 rounded-2xl shadow-sm hover:shadow-md hover:bg-primary transition-all text-center">
+                <span class="text-4xl block mb-2">{{ cat.icon }}</span>
+                <span class="font-bold text-gray-700 group-hover:text-white">{{ cat.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section id="como-funciona" class="bg-gray-200 py-16 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-12">Como encontrar seu Match Gastronômico</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <div class="bg-primary w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-4">1</div>
+                    <h3 class="font-bold text-xl mb-2">Explore</h3>
+                    <p class="text-gray-600">Veja fotos reais dos pratos mais suculentos por perto.</p>
+                </div>
+                <div>
+                    <div class="bg-primary w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-4">2</div>
+                    <h3 class="font-bold text-xl mb-2">Swipe</h3>
+                    <p class="text-gray-600">Curtiu? Deslize para a direita. Não é sua vibe? Esquerda.</p>
+                </div>
+                <div>
+                    <div class="bg-primary w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mx-auto mb-4">3</div>
+                    <h3 class="font-bold text-xl mb-2">Match!</h3>
+                    <p class="text-gray-600">Descubra mais sobre o restaurante e aproveite!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% include 'main/partials/footer.html' %}
 {% endblock %}
