@@ -23,6 +23,7 @@ dependencies = [
     "email-validator",
     "flask-sqlalchemy",
     "sqlalchemy",
+    "flask_jwt_extended",
 ]
 
 [project.optional-dependencies]

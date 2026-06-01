@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+# Força o carregamento do contexto de dev antes de iniciar a configuração
+load_dotenv(".env.dev", override=True)
 
 def init_app(app):
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')

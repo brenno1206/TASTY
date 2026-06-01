@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 # GERENCIAMENTO DE AMBIENTE
 # ==========================================================
 
-def load_env(env: str):
+@task  # Aviso para o invoke de que isso é um comando
+def load_env(c, env="dev"): # 'c' é o contexto obrigatório
     """
     Carrega o arquivo .env correspondente ao ambiente.
     Ex: dev, test, prod
@@ -19,14 +20,11 @@ def load_env(env: str):
 
     if not os.path.exists(env_file):
         raise FileNotFoundError(
-            f"Erro Crítico: O arquivo de ambiente '{env_file} não foi encontrado."
+            f"Erro Crítico: O arquivo de ambiente '{env_file}' não foi encontrado."
         )
 
-    if os.path.exists(env_file):
-        load_dotenv(env_file, override=True)
-        print(f"[ENV] Carregado: {env_file}")
-    else:
-        raise FileNotFoundError(f"{env_file} não encontrado")
+    load_dotenv(env_file, override=True)
+    print(f"[ENV] Carregado: {env_file}")
 
 
 # ==========================================================
