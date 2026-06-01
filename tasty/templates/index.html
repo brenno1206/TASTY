@@ -1,9 +1,9 @@
-{% extends 'main/base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Tasty - Encontre seu próximo Match Gastronômico{% endblock %}
 
 {% block content %}
-{% include 'main/partials/navbar.html' %}
+{% include 'partials/navbar.html' %}
 
 <main class="min-h-screen">
     <section class="relative bg-darker py-20 px-6 overflow-hidden">
@@ -32,7 +32,7 @@
                 <div class="relative w-72 h-[450px] bg-white rounded-[2rem] shadow-2xl border-8 border-dark overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-500">
                     <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=1000" class="w-full h-2/3 object-cover" alt="Pizza">
                     <div class="p-6">
-                        <h4 class="text-xl font-bold">Cu da daphne &#127829;</h4>
+                        <h4 class="text-xl font-bold">Pizza da Lolla &#127829;</h4>
                         <p class="text-sm text-gray-500">A 2km de você</p>
                         <div class="flex gap-2 mt-4">
                             <div class="w-10 h-10 rounded-full border-2 border-red-500 flex items-center justify-center text-red-500 font-bold italic">X</div>
@@ -91,5 +91,5 @@
     </section>
 </main>
 
-{% include 'main/partials/footer.html' %}
+{% include 'partials/footer.html' %}
 {% endblock %}

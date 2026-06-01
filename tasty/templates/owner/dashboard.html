@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Painel do Restaurante - Tasty{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<main class="min-h-screen bg-gray-100 py-10 px-6">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-black text-darker">Meus Negócios</h1>
+                <p class="text-gray-500">Gerencie seus restaurantes e veja seus matches.</p>
+            </div>
+            <div class="flex gap-4">
+                <button class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-bold transition-all">
+                    + Novo Negócio
+                </button>
+                <a href="{{ url_for('auth.logout') }}" class="px-6 py-2 rounded-lg font-bold border border-gray-300 hover:bg-gray-200 transition-all">Sair</a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Matches Hoje</div>
+                <div class="text-4xl font-black text-primary">124</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Visualizações</div>
+                <div class="text-4xl font-black text-darker">892</div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

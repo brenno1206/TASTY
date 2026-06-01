@@ -14,4 +14,4 @@ bp_main = Blueprint("main", __name__)
 @bp_main.route("/index")
 def index():
     current_app.logger.debug("Renderizando index.html")
-    return render_template("main/index.html")
+    return render_template("index.html")

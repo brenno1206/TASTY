@@ -26,7 +26,7 @@ class User(db.Model):
     cpf: Mapped[Optional[str]] = mapped_column(String(20), unique=True)
     created_at: Mapped[Optional[str]] = mapped_column(String(45)) # Pode usar DateTime depois se quiser
     updated_at: Mapped[Optional[str]] = mapped_column(String(45))
-    is_active: Mapped[Optional[str]] = mapped_column(String(45), default="True")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
 
     # FK Role
     role_id: Mapped[Optional[int]] = mapped_column(

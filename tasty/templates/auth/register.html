@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Criar Conta - Tasty{% endblock %}
+
+{% block content %}
+{% include 'partials/navbar.html' %}
+
+<main class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-6">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg border-t-4 border-primary">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-darker">Crie sua Conta</h1>
+            <p class="text-gray-500 mt-2">Junte-se ao Tasty e comece a explorar.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-lg text-sm font-bold {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('auth.register') }}" method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Nome Completo</label>
+                    <input type="text" name="name" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">CPF</label>
+                    <input type="text" name="cpf" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary outline-none" placeholder="000.000.000-00">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">E-mail</label>
+                <input type="email" name="email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Telefone</label>
+                    <input type="text" name="phone" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Senha</label>
+                    <input type="password" name="password" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Tipo de Conta</label>
+                <div class="flex gap-4 mt-2">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="role" value="client" checked class="peer sr-only">
+                        <div class="p-4 border-2 rounded-lg text-center font-bold peer-checked:border-primary peer-checked:bg-orange-50 hover:bg-gray-50 transition-all">
+                            🍔 Quero Comer
+                        </div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="role" value="owner" class="peer sr-only">
+                        <div class="p-4 border-2 rounded-lg text-center font-bold peer-checked:border-primary peer-checked:bg-orange-50 hover:bg-gray-50 transition-all">
+                            🏪 Tenho um Negócio
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 rounded-lg transition-all shadow-md mt-6">
+                Criar Conta
+            </button>
+        </form>
+        
+        <p class="text-center mt-6 text-gray-600 text-sm">
+            Já tem uma conta? <a href="{{ url_for('auth.login') }}" class="text-primary font-bold hover:underline">Faça login</a>
+        </p>
+    </div>
+</main>
+{% endblock %}
