@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Força o carregamento do contexto de dev antes de iniciar a configuração
 load_dotenv(".env.dev", override=True)
 
 def init_app(app):
@@ -26,24 +26,15 @@ def init_app(app):
     # ======================================================
     # MODO 1: DATABASE URL EXPLÍCITO (PROD / TEST / REMOTO)
     # ======================================================
-    database_url = os.environ.get("DATABASE_URL")
-    
-    if database_url:
-        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    database_name = os.environ.get("DATABASE_NAME", "tasty_dev.db")
 
-    # ======================================================
-    # MODO 2: SQLITE LOCAL (DEV / TEST LOCAL)
-    # ======================================================
-    else:
-        database_name = os.environ.get("DATABASE_NAME")
+    instance_dir = Path(app.instance_path)
+    instance_dir.mkdir(parents=True, exist_ok=True)
 
-        if not database_name:
-            raise RuntimeError("DATABASE_URL ou DATABASE_NAME deve ser configurado.")
+    db_path = instance_dir / database_name
 
-        # Garante que a pasta instance existe antes de criar o banco SQLite
-        os.makedirs(app.instance_path, exist_ok=True)
-        db_path = os.path.join(app.instance_path, database_name)
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    # 🔥 IMPORTANTE: formato Windows-safe absoluto
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path.as_posix()
 
     # As configurações abaixo agora serão executadas em ambos os modos
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

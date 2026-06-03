@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Onboarding - Tasty{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-3xl bg-white rounded-2xl shadow p-8 space-y-8">
+
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Bem-vindo ao Tasty 👋</h1>
+            <p class="text-gray-600">Vamos configurar seu perfil para melhorar suas recomendações.</p>
+        </div>
+
+        <!-- =========================
+             PREFERÊNCIAS
+        ========================== -->
+        <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">
+                O que você gosta de ver?
+            </h2>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {% for type in business_types %}
+                <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" value="{{ type.id }}" class="pref-checkbox accent-orange-500">
+                    <span class="text-sm text-gray-700">{{ type.name }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- =========================
+             ENDEREÇO
+        ========================== -->
+        <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">
+                Onde você está?
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input id="road" type="text" placeholder="Rua"
+                    class="border rounded-lg p-3 w-full">
+
+                <input id="number" type="number" placeholder="Número"
+                    class="border rounded-lg p-3 w-full">
+
+                <input id="district" type="text" placeholder="Bairro"
+                    class="border rounded-lg p-3 w-full">
+
+                <input id="zipcode" type="text" placeholder="CEP"
+                    class="border rounded-lg p-3 w-full">
+
+                <input id="city_id" type="number" placeholder="ID da cidade"
+                    class="border rounded-lg p-3 w-full md:col-span-2">
+            </div>
+        </div>
+
+        <!-- BOTÃO -->
+        <button
+            onclick="submitOnboarding()"
+            class="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-primary-dark transition">
+            Finalizar onboarding
+        </button>
+
+    </div>
+</div>
+
+<script>
+async function submitOnboarding() {
+    const preferences = Array.from(
+        document.querySelectorAll(".pref-checkbox:checked")
+    ).map(el => parseInt(el.value));
+
+    const address = {
+        road: document.getElementById("road").value,
+        number: parseInt(document.getElementById("number").value),
+        district: document.getElementById("district").value,
+        zipcode: document.getElementById("zipcode").value,
+        city_id: parseInt(document.getElementById("city_id").value),
+    };
+
+    try {
+        const response = await fetch("/client/onboarding", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                preferences,
+                address
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            window.location.href = "/dashboard";
+        } else {
+            alert(data.error || "Erro ao salvar onboarding");
+        }
+    } catch (err) {
+        alert("Erro de conexão com o servidor");
+        console.error(err);
+    }
+}
+</script>
+{% endblock %}

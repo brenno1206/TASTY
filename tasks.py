@@ -10,8 +10,7 @@ from dotenv import load_dotenv
 # GERENCIAMENTO DE AMBIENTE
 # ==========================================================
 
-@task  # Aviso para o invoke de que isso é um comando
-def load_env(c, env="dev"): # 'c' é o contexto obrigatório
+def load_env(env="dev"):
     """
     Carrega o arquivo .env correspondente ao ambiente.
     Ex: dev, test, prod
@@ -59,7 +58,7 @@ def run(c):
     """
     Executa a aplicacao Flask em ambiente de desenvolvimento.
     """
-    load_dotenv(".env.dev", override=True)
+    load_env("dev");
 
     env = os.environ.copy()
 

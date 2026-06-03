@@ -22,7 +22,8 @@ def init_app(app):
         
         click.echo(f"Diretório atual: {os.getcwd()}")
         click.echo(f"Utilizando banco de dados: {current_app.config['SQLALCHEMY_DATABASE_URI']}")
-        
+        click.echo(f"Instance path: {current_app.instance_path}")
+        click.echo(f"DB URI: {current_app.config['SQLALCHEMY_DATABASE_URI']}")
         db.create_all()
         click.echo("Banco de dados materializado com sucesso!")
 
@@ -61,7 +62,7 @@ def init_app(app):
         # Aqui você chamará o modelo de usuário e salvará o root
         # Ex: from tasty.models.user import User ...
         click.echo("Função create-root executada.")
-s
+
     # ======================================================
     # CREATE ROLES
     # ======================================================

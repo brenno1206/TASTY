@@ -9,8 +9,10 @@ from .photo import Photo
 from .business_owner import BusinessOwner
 from .preference import Preference
 from .business_has_type import BusinessHasType
+from .business_swipe import BusinessSwipe
 
 __all__ = [
     "Level", "Role", "User", "City", "Address", "BusinessType", 
-    "Business", "Photo", "BusinessOwner", "Preference", "BusinessHasType"
+    "Business", "Photo", "BusinessOwner", "Preference", "BusinessHasType",
+    "BusinessSwipe"
 ]

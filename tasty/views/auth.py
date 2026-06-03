@@ -42,7 +42,7 @@ def login():
     # Se já estiver logado, redireciona para o painel correto
     if "user_id" in session:
         role = session.get("user_role")
-        return redirect(url_for(f"{role}.dashboard"))
+        return redirect(url_for(f"main.dashboard"))
 
     if request.method == "POST":
         email = request.form.get("email")
@@ -58,7 +58,7 @@ def login():
             session["user_name"] = user.name
             
             flash(f"Bem-vindo, {user.name}!", "success")
-            return redirect(url_for(f"{role}.dashboard"))
+            return redirect(url_for(f"main.home"))
         else:
             flash(msg, "danger")
 

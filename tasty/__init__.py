@@ -1,5 +1,6 @@
 from flask import Flask
 import logging
+from tasty.ext.cli import init_app as init_cli
 
 
 def create_app(test_config=None):
@@ -31,6 +32,8 @@ def create_app(test_config=None):
     # Registro dos modelos no metadata do SQLAlchemy
     from tasty.ext.db import register_models
     register_models()
+    
+    init_cli(app)
 
     # ----------------------------------------------------------
     # Outras extensoes

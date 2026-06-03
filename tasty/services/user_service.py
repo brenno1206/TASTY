@@ -113,6 +113,7 @@ def _get_active_users_by_role(role_name: str) -> List[User]:
     stmt = select(User).join(Role).where(Role.name == role_name, User.is_active == True)
     return list(db.session.execute(stmt).scalars().all())
 
+
 # ==========================================================
 # GERENCIAMENTO DE ADMINISTRADOR
 # ==========================================================
