@@ -1,0 +1,34 @@
+<nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+            
+            <div class="flex items-center">
+                <a href="{{ url_for('discovery.feed') }}" class="text-3xl font-extrabold text-primary tracking-tighter">
+                    Tasty<span class="text-dark">.</span>
+                </a>
+            </div>
+
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="{{ url_for('discovery.feed') }}" class="text-gray-800 hover:text-primary font-bold transition-colors flex items-center gap-2">
+                    <span class="text-xl">🔥</span> Explorar
+                </a>
+                <a href="{{ url_for('discovery.favorites') }}" class="text-gray-600 hover:text-primary font-medium transition-colors flex items-center gap-2">
+                    <span class="text-xl">⭐</span> Matches
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <a href="{{ url_for('client.dashboard') }}" class="flex items-center gap-2 text-gray-600 hover:text-primary font-medium transition-colors">
+                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold overflow-hidden border border-gray-300">
+                        {{ session.get('user_name', 'U')[0] | upper }}
+                    </div>
+                    <span class="hidden sm:block">{{ session.get('user_name', 'Perfil') }}</span>
+                </a>
+                <span class="text-gray-300">|</span>
+                <a href="{{ url_for('auth.logout') }}" class="text-red-500 hover:text-red-700 text-sm font-bold transition-colors">
+                    Sair
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                primary: '#ff7a00',
+                'primary-dark': '#e66d00',
+                dark: '#1a1a1a',
+                darker: '#222222'
+              }
+            }
+          }
+        }
+    </script>
+    <title>{% block title %} Tasty {% endblock %}</title>
+    {% endblock %}
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="fixed top-4 right-4 z-50 flex flex-col gap-3">
+          {% for category, message in messages %}
+            {% set bg_color = 'bg-blue-500' %}
+            {% if category == 'success' %} {% set bg_color = 'bg-green-500' %}
+            {% elif category == 'danger' or category == 'error' %} {% set bg_color = 'bg-red-500' %}
+            {% elif category == 'warning' %} {% set bg_color = 'bg-yellow-500' %}
+            {% endif %}
+            
+            <div class="{{ bg_color }} text-white px-6 py-3 rounded shadow-lg opacity-90 transition-opacity duration-300" 
+                 role="alert" 
+                 onclick="this.style.display='none'">
+                {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block navbar %}
+    {% endblock %}
+
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+    {% block footer %}
+    {% endblock %}
+
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>

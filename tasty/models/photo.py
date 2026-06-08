@@ -1,6 +1,6 @@
-from typing import Optional, TYPE_CHECKING
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING, Optional
 from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from tasty.ext.db import db
 
 if TYPE_CHECKING:
@@ -8,11 +8,10 @@ if TYPE_CHECKING:
 
 class Photo(db.Model):
     __tablename__ = "photos"
-    __table_args__ = {'extend_existing': True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     url: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(255))
+    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     
     # FK
     business_id: Mapped[int] = mapped_column(

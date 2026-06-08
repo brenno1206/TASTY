@@ -1,10 +1,12 @@
-{% extends 'base.html' %}
+{% extends 'layouts/base.html' %}
 
 {% block title %}Tasty - Encontre seu próximo Match Gastronômico{% endblock %}
 
-{% block content %}
-{% include 'partials/navbar.html' %}
+{% block navbar %}
+    {% include 'layouts/navbar.html' %}
+{% endblock %}
 
+{% block content %}
 <main class="min-h-screen">
     <section class="relative bg-darker py-20 px-6 overflow-hidden">
         <div class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl"></div>
@@ -19,7 +21,7 @@
                     O Tasty ajuda você a encontrar os melhores restaurantes da cidade de um jeito divertido. Deu vontade? É só deslizar!
                 </p>
                 <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                    <a href="/explore" class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 text-center shadow-lg shadow-primary/20">
+                    <a href="{{ url_for('discovery.feed') }}" class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 text-center shadow-lg shadow-primary/20">
                         Começar a explorar
                     </a>
                     <a href="#como-funciona" class="border border-gray-600 text-gray-300 hover:bg-gray-800 px-8 py-4 rounded-full font-bold text-lg transition-all text-center">
@@ -48,18 +50,17 @@
     <section class="py-16 max-w-7xl mx-auto px-6">
         <h2 class="text-3xl font-bold mb-8">O que você está desejando hoje?</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <!-- MUDAR PRA PEGAR OS TIPOS DO BD -->
             {% set categorias = [
                 {'name': 'Hamburgueria', 'icon': '🍔'},
                 {'name': 'Pizzaria', 'icon': '🍕'},
                 {'name': 'Comida Japonesa', 'icon': '🍣'},
                 {'name': 'Cozinha Italiana', 'icon': '🍝'},
-                {'name': 'Restaurante Vegano', 'icon': '🌿'},
+                {'name': 'Comida Vegana', 'icon': '🌿'},
                 {'name': 'Doceria', 'icon': '🍩'}
             ] %}
             
             {% for cat in categorias %}
-            <a href="/category/{{ cat.name|lower }}" class="group bg-white p-6 rounded-2xl shadow-sm hover:shadow-md hover:bg-primary transition-all text-center">
+            <a href="{{ url_for('auth.register') }}" class="group bg-white p-6 rounded-2xl shadow-sm hover:shadow-md hover:bg-primary transition-all text-center">
                 <span class="text-4xl block mb-2">{{ cat.icon }}</span>
                 <span class="font-bold text-gray-700 group-hover:text-white">{{ cat.name }}</span>
             </a>
@@ -90,6 +91,8 @@
         </div>
     </section>
 </main>
+{% endblock %}
 
-{% include 'partials/footer.html' %}
+{% block footer %}
+    {% include 'layouts/footer.html' %}
 {% endblock %}

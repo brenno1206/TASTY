@@ -1,1 +1,84 @@
-<!--CRIAR/EDITAR ADMIN-->
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ action }} Administrador - Tasty{% endblock %}
+
+{% block navbar %}
+    {% include 'layouts/navbar_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<main class="min-h-screen bg-gray-50 py-10 px-6">
+    <div class="max-w-3xl mx-auto">
+        
+        <div class="mb-6 flex items-center gap-4">
+            <a href="{{ url_for('admin.list_admins') }}" class="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+                &larr;
+            </a>
+            <div>
+                <h1 class="text-2xl font-black text-darker">{{ action }} Administrador</h1>
+                <p class="text-gray-500 text-sm">Preencha as informações do membro da equipe.</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <form action="{{ url_for('admin.edit_admin', id=user.id) if user else url_for('admin.create_admin') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Nome Completo <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" value="{{ user.name if user else '' }}" required 
+                               class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">CPF</label>
+                        <input type="text" name="cpf" value="{{ user.cpf if user else '' }}" 
+                               class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none" placeholder="Opcional">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">E-mail corporativo <span class="text-red-500">*</span></label>
+                        <input type="email" name="email" value="{{ user.email if user else '' }}" required 
+                               class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Telefone</label>
+                        <input type="text" name="phone" value="{{ user.phone if user else '' }}" 
+                               class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 pt-6 mt-6">
+                    <h3 class="text-lg font-bold mb-4">Segurança</h3>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">
+                            Senha {% if not user %}<span class="text-red-500">*</span>{% endif %}
+                        </label>
+                        <input type="password" name="password" {% if not user %}required{% endif %} 
+                               class="w-full md:w-1/2 px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                        {% if user %}
+                            <p class="text-xs text-gray-400 mt-2">Deixe em branco se não quiser alterar a senha atual.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 border-t border-gray-200 pt-6">
+                    <a href="{{ url_for('admin.list_admins') }}" class="px-6 py-2.5 border border-gray-300 text-gray-700 font-bold rounded hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded shadow transition-colors">
+                        {{ action }} Administrador
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</main>
+{% endblock %}
+
+{% block footer %}
+    {% include 'layouts/footer.html' %}
+{% endblock %}

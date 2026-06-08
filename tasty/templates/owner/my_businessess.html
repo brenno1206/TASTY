@@ -1,0 +1,87 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Meus Restaurantes - Tasty{% endblock %}
+
+{% block navbar %}
+    {% include 'layouts/navbar_owner.html' %}
+{% endblock %}
+
+{% block content %}
+<main class="min-h-screen bg-gray-50 py-10 px-6">
+    <div class="max-w-7xl mx-auto">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl font-black text-darker">Meus Estabelecimentos</h1>
+                <p class="text-gray-500 text-sm mt-1">Gerencie as informações das suas filiais no app.</p>
+            </div>
+            <a href="{{ url_for('business_panel.register_business') }}" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-6 rounded shadow transition-colors flex items-center gap-2 whitespace-nowrap">
+                <span>+</span> Adicionar Filial
+            </a>
+        </div>
+
+        {% if businesses %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for b in businesses %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                <div class="h-48 bg-gray-200 relative">
+                    {% if b.photos %}
+                        <img src="{{ b.photos[0].url }}" alt="Foto de {{ b.trade_name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-gray-400">
+                            Sem foto
+                        </div>
+                    {% endif %}
+                    {% if not b.is_active %}
+                    <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <span class="bg-red-600 text-white font-bold px-3 py-1 rounded">Inativo</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="p-5 flex-grow">
+                    <h3 class="font-bold text-xl text-gray-800 mb-1">{{ b.trade_name }}</h3>
+                    <p class="text-xs text-gray-500 mb-3">CNPJ: {{ b.cnpj }}</p>
+                    
+                    <p class="text-sm text-gray-600 line-clamp-2 mb-4">
+                        {{ b.description or "Nenhuma descrição informada." }}
+                    </p>
+                    
+                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                        <span>🕒</span> {{ b.opening_time or '--' }} às {{ b.closing_time or '--' }}
+                    </div>
+                </div>
+                
+                <div class="px-5 py-4 border-t border-gray-100 flex justify-between items-center bg-gray-50 mt-auto">
+                    <a href="{{ url_for('business_panel.edit_business', id=b.id) }}" class="text-primary hover:text-primary-dark font-bold text-sm">
+                        Editar Detalhes
+                    </a>
+                    
+                    <form action="{{ url_for('business_panel.delete_business', id=b.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja desativar este restaurante do aplicativo?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-bold">
+                            Desativar
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-sm border border-dashed border-gray-300 p-12 text-center">
+            <div class="text-6xl mb-4">🏪</div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Você ainda não possui restaurantes ativos.</h3>
+            <p class="text-gray-500 mb-6">Cadastre seu primeiro estabelecimento para começar a receber clientes.</p>
+            <a href="{{ url_for('business_panel.register_business') }}" class="inline-block bg-primary hover:bg-primary-dark text-white font-bold py-2 px-6 rounded shadow transition-colors">
+                Cadastrar Agora
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</main>
+{% endblock %}
+
+{% block footer %}
+    {% include 'layouts/footer.html' %}
+{% endblock %}

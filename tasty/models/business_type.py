@@ -1,6 +1,6 @@
-from typing import List, TYPE_CHECKING
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import List, Optional, TYPE_CHECKING
 from sqlalchemy import Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from tasty.ext.db import db
 
 if TYPE_CHECKING:
@@ -9,14 +9,13 @@ if TYPE_CHECKING:
 
 class BusinessType(db.Model):
     __tablename__ = "business_types"
-    __table_args__ = {'extend_existing': True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(45), nullable=False)
-    emoji: Mapped[str | None] = mapped_column(String(10)) # HTML
-    description: Mapped[str | None] = mapped_column(String(255))
+    emoji: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
-    # N:N
+    # N:N Relationships
     businesses: Mapped[List["Business"]] = relationship(
         "Business", secondary="business_has_type", back_populates="business_types"
     )

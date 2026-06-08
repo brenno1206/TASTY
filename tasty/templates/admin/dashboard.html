@@ -1,1 +1,81 @@
-<!--PAINEL CENTRAL DO ADMIN-->
+{% extends 'layouts/base.html' %}
+
+{% block title %}Painel Administrativo - Tasty{% endblock %}
+
+{% block navbar %}
+    {% include 'layouts/navbar_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<main class="min-h-screen bg-gray-50 py-10 px-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-black text-darker">Visão Geral do Sistema</h1>
+                <p class="text-gray-500 mt-1">Acompanhe as métricas e gerencie a plataforma Tasty.</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex gap-3">
+                <a href="{{ url_for('admin.list_admins') }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-4 rounded shadow-sm transition-colors">
+                    Gerenciar Equipe
+                </a>
+                <a href="{{ url_for('owner.list_owners') }}" class="bg-dark hover:bg-darker text-white font-bold py-2 px-4 rounded shadow-sm transition-colors">
+                    Ver Restaurantes
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Clientes Ativos</h3>
+                <p class="text-3xl font-black text-gray-800">1,248</p>
+                <p class="text-green-500 text-xs font-bold mt-2">+12% este mês</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-primary">
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Restaurantes</h3>
+                <p class="text-3xl font-black text-gray-800">342</p>
+                <p class="text-green-500 text-xs font-bold mt-2">+5 novos hoje</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-red-500">
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Swipes (Matches)</h3>
+                <p class="text-3xl font-black text-gray-800">84.5K</p>
+                <p class="text-gray-400 text-xs font-bold mt-2">Volume total processado</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-green-500">
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Status do Servidor</h3>
+                <p class="text-3xl font-black text-green-500">Online</p>
+                <p class="text-gray-400 text-xs font-bold mt-2">Latência: 45ms</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <h2 class="text-xl font-bold mb-6">Módulos Administrativos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <a href="{{ url_for('client.list_clients') }}" class="group block p-6 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all">
+                    <div class="text-3xl mb-3">🍔</div>
+                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">Consumidores</h3>
+                    <p class="text-sm text-gray-500 mt-2">Visualizar e gerenciar as contas dos clientes que usam o aplicativo.</p>
+                </a>
+
+                <a href="{{ url_for('owner.list_owners') }}" class="group block p-6 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all">
+                    <div class="text-3xl mb-3">🏪</div>
+                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">Parceiros Comerciais</h3>
+                    <p class="text-sm text-gray-500 mt-2">Auditar donos de restaurantes e controlar acessos ao painel de negócios.</p>
+                </a>
+
+                <a href="{{ url_for('admin.list_admins') }}" class="group block p-6 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all bg-gray-50">
+                    <div class="text-3xl mb-3">🛡️</div>
+                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">Administradores</h3>
+                    <p class="text-sm text-gray-500 mt-2">Gerenciar privilégios, adicionar ou remover membros da equipe interna.</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block footer %}
+    {% include 'layouts/footer.html' %}
+{% endblock %}

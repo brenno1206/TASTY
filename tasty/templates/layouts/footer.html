@@ -1,0 +1,38 @@
+<footer class="bg-darker text-gray-300 py-12 mt-auto border-t-4 border-primary">
+    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <div>
+            <h2 class="text-2xl font-extrabold text-white tracking-tighter mb-4">
+                Tasty<span class="text-primary">.</span>
+            </h2>
+            <p class="text-gray-400 text-sm leading-relaxed max-w-xs">
+                Transformando a maneira como você descobre os melhores sabores da sua região. Deslize e aproveite.
+            </p>
+        </div>
+
+        <div>
+            <h3 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">A Plataforma</h3>
+            <ul class="space-y-2">
+                <li><a href="#" class="hover:text-primary transition-colors">Sobre nós</a></li>
+                <li><a href="{{ url_for('auth.register') }}" class="hover:text-primary transition-colors">Cadastre seu Restaurante</a></li>
+                <li><a href="#" class="hover:text-primary transition-colors">Central de Ajuda</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">Legal</h3>
+            <ul class="space-y-2">
+                <li><a href="#" class="hover:text-primary transition-colors">Termos de Uso</a></li>
+                <li><a href="#" class="hover:text-primary transition-colors">Política de Privacidade</a></li>
+                <li><a href="#" class="hover:text-primary transition-colors">Política de Cookies</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-gray-800 text-sm text-center md:text-left flex flex-col md:flex-row justify-between items-center">
+        <p>&copy; 2026 Tasty Inc. Todos os direitos reservados.</p>
+        <p class="mt-4 md:mt-0 text-gray-500">
+            Feito com <span class="text-red-500">♥</span> para os amantes da gastronomia.
+        </p>
+    </div>
+</footer>

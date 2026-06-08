@@ -1,18 +1,16 @@
 from typing import Dict, Any, Tuple, Optional, List
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
-from tasty.models import (
-    User, Role, Level, Business, Address, City, 
-    BusinessType, Photo
-)
+from tasty.models import User, Role, Level, Address, BusinessType
 from tasty.ext.db import db
 
 # ==========================================================
 # GERENCIAMENTO DE NÍVEIS E PAPÉIS (ROLES)
 # ==========================================================
 
-def get_or_create_level(name: str, description: str = "") -> 'Level':
+def get_or_create_level(name: str, description: str = "") -> Level:
     stmt = select(Level).where(Level.name == name)
     level = db.session.execute(stmt).scalar_one_or_none()
     
@@ -22,7 +20,7 @@ def get_or_create_level(name: str, description: str = "") -> 'Level':
         db.session.commit()
     return level
 
-def get_or_create_role(name: str, level_name: str = None) -> 'Role':
+def get_or_create_role(name: str, level_name: str = None) -> Role:
     stmt = select(Role).where(Role.name == name)
     role = db.session.execute(stmt).scalar_one_or_none()
     
@@ -40,40 +38,66 @@ def get_or_create_role(name: str, level_name: str = None) -> 'Role':
 
 
 # ==========================================================
-# FUNÇÕES AUXILIARES GERAIS
+# FUNÇÕES AUXILIARES GERAIS DE USUÁRIO
 # ==========================================================
 
 def _create_user_with_role(data: Dict[str, Any], role_name: str) -> Tuple[bool, str, int]:
     if not data or not isinstance(data, dict):
         return False, "Erro: Dados inválidos.", 400
     
+    # Copia o dicionário para evitar mutações colaterais no escopo de quem chamou a função
+    payload = data.copy()
+    
     try:
-        # Verifica se email e CPF já existem
-        if db.session.execute(select(User).where(User.email == data.get("email"))).scalar_one_or_none():
+        # Validação estrita de unicidade antes da tentativa de inserção
+        if db.session.execute(select(User).where(User.email == payload.get("email"))).scalar_one_or_none():
             return False, "Erro: Email já registrado.", 400
-        if data.get("cpf") and db.session.execute(select(User).where(User.cpf == data.get("cpf"))).scalar_one_or_none():
+            
+        if payload.get("cpf") and db.session.execute(select(User).where(User.cpf == payload.get("cpf"))).scalar_one_or_none():
             return False, "Erro: CPF já registrado.", 400
         
         role = get_or_create_role(role_name)
         
-        # Extrai relacionamentos para não quebrar a criação dinâmica
-        addresses_data = data.pop("addresses", [])
-        preferences_ids = data.pop("preferences", [])
+        # Isolamento de estruturas de relacionamentos
+        addresses_data = payload.pop("addresses", [])
+        preferences_ids = payload.pop("preferences", [])
         
-        # Faz o hash da senha
-        if "password" in data:
-            data["password"] = generate_password_hash(data["password"])
+        # Tratamento seguro da credencial secreta
+        if "password" in payload:
+            payload["password"] = generate_password_hash(payload["password"])
             
-        # Cria usuário com todos os atributos restantes (name, phone, photo, etc)
-        new_user = User(**data, role_id=role.id)
+        # Instanciação mapeada do Usuário
+        new_user = User(
+            name=payload.get("name"),
+            email=payload.get("email"),
+            phone=payload.get("phone"),
+            photo=payload.get("photo"),
+            password=payload.get("password"),
+            google_id=payload.get("google_id"),
+            facebook_id=payload.get("facebook_id"),
+            cpf=payload.get("cpf"),
+            role_id=role.id
+        )
         
-        # Associa Endereços (1:N)
+        # Vinculo seguro de endereços
         for addr in addresses_data:
-            new_user.addresses.append(Address(**addr))
+            new_user.addresses.append(
+                Address(
+                    road=addr.get("road"),
+                    number=addr.get("number"),
+                    district=addr.get("district"),
+                    zipcode=addr.get("zipcode"),
+                    latitude=addr.get("latitude"),
+                    longitude=addr.get("longitude"),
+                    city_id=addr.get("city_id")
+                )
+            )
             
-        # Associa Preferências de BusinessTypes (N:N)
+        # Vinculo N:N de preferências gastronômicas
         if preferences_ids:
-            b_types = db.session.execute(select(BusinessType).where(BusinessType.id.in_(preferences_ids))).scalars().all()
+            b_types = db.session.execute(
+                select(BusinessType).where(BusinessType.id.in_(preferences_ids))
+            ).scalars().all()
             new_user.preferences.extend(b_types)
             
         db.session.add(new_user)
@@ -85,28 +109,40 @@ def _create_user_with_role(data: Dict[str, Any], role_name: str) -> Tuple[bool, 
         return False, f"Erro no banco de dados: {str(e)}", 500
 
 def _update_user_dynamically(user: User, data: Dict[str, Any]) -> None:
-    """Atualiza atributos e relacionamentos de um usuário dinamicamente."""
-    # Atualiza atributos diretos
-    for key, value in data.items():
-        if hasattr(user, key) and key not in ["id", "role_id", "addresses", "preferences", "owned_businesses"]:
-            if key == "password":
-                value = generate_password_hash(value)
-            setattr(user, key, value)
+    """Atualiza de forma segura atributos diretos e relacionamentos permitidos."""
+    # Lista restrita de campos primitivos que podem sofrer mutação genérica por API cadastral
+    allowed_fields = {"name", "phone", "photo", "google_id", "facebook_id", "cpf"}
+    
+    for key in allowed_fields:
+        if key in data:
+            setattr(user, key, data[key])
             
-    # Atualiza Endereços (Substitui os antigos pelos novos)
+    # Atualização estrutural de endereços associados (Substituição por cascade completo)
     if "addresses" in data:
-        user.addresses.clear() # Deleta os órfãos graças ao cascade="all, delete-orphan"
+        user.addresses.clear()
         for addr in data["addresses"]:
-            user.addresses.append(Address(**addr))
+            user.addresses.append(
+                Address(
+                    road=addr.get("road"),
+                    number=addr.get("number"),
+                    district=addr.get("district"),
+                    zipcode=addr.get("zipcode"),
+                    latitude=addr.get("latitude"),
+                    longitude=addr.get("longitude"),
+                    city_id=addr.get("city_id")
+                )
+            )
             
-    # Atualiza Preferências
+    # Atualização N:N das preferências
     if "preferences" in data:
         user.preferences.clear()
-        b_types = db.session.execute(select(BusinessType).where(BusinessType.id.in_(data["preferences"]))).scalars().all()
-        user.preferences.extend(b_types)
+        if data["preferences"]:
+            b_types = db.session.execute(
+                select(BusinessType).where(BusinessType.id.in_(data["preferences"]))
+            ).scalars().all()
+            user.preferences.extend(b_types)
 
 def _soft_delete_user(user: User) -> None:
-    """Aplica o soft delete."""
     user.is_active = False
     
 def _get_active_users_by_role(role_name: str) -> List[User]:
@@ -126,7 +162,6 @@ def get_admin(admin_id: int) -> Optional[User]:
     return db.session.execute(stmt).scalar_one_or_none()
 
 def get_admins_by_level(level_name: str) -> List[User]:
-    """Obtém administradores filtrados por um nível específico (ex: 'max', 'premium', 'basic')."""
     stmt = (
         select(User)
         .join(Role)
@@ -134,7 +169,7 @@ def get_admins_by_level(level_name: str) -> List[User]:
         .where(
             Role.name == "admin", 
             Level.name == level_name,
-            User.is_active == True # Apenas admins ativos
+            User.is_active == True
         )
     )
     return list(db.session.execute(stmt).scalars().all())
@@ -167,6 +202,7 @@ def delete_admin(admin_id: int) -> Tuple[bool, str, int]:
 def get_all_admins() -> List[User]:
     return _get_active_users_by_role("admin")
 
+
 # ==========================================================
 # GERENCIAMENTO DE CLIENTE
 # ==========================================================
@@ -185,7 +221,7 @@ def update_client(client_id: int, data: Dict[str, Any]) -> Tuple[bool, str, int]
     try:
         _update_user_dynamically(client, data)
         db.session.commit()
-        return True, "Cliente atualizado com sucesso.", 200
+        return True, "Cliente updated com sucesso.", 200
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Erro ao atualizar: {str(e)}", 500
@@ -205,8 +241,9 @@ def delete_client(client_id: int) -> Tuple[bool, str, int]:
 def get_all_clients() -> List[User]:
     return _get_active_users_by_role("client")
 
+
 # ==========================================================
-# GERENCIAMENTO DE DONO DE NEGÓCIO
+# GERENCIAMENTO DE DONO DE NEGÓCIO (OWNER)
 # ==========================================================
 
 def create_business_owner(data: Dict[str, Any]) -> Tuple[bool, str, int]:
@@ -243,118 +280,12 @@ def delete_business_owner(owner_id: int) -> Tuple[bool, str, int]:
 def get_all_business_owners() -> List[User]:
     return _get_active_users_by_role("owner")
 
-# ==========================================================
-# GERENCIAMENTO DE NEGÓCIO
-# ==========================================================
-
-def create_business(data: Dict[str, Any]) -> Tuple[bool, str, int]:
-    if not data or not isinstance(data, dict):
-        return False, "Erro: Dados inválidos.", 400
-        
-    try:
-        if db.session.execute(select(Business).where(Business.cnpj == data.get("cnpj"))).scalar_one_or_none():
-            return False, "Erro: CNPJ já registrado.", 400
-
-        # Extrai relacionamentos
-        addresses_data = data.pop("addresses", [])
-        photos_urls = data.pop("photos", []) # Espera lista de strings (URLs) ou dicts
-        owners_ids = data.pop("owners", []) # Espera lista de IDs
-        types_ids = data.pop("business_types", []) # Espera lista de IDs
-        
-        new_business = Business(**data)
-        
-        # Associação de Relacionamentos
-        for addr in addresses_data:
-            new_business.addresses.append(Address(**addr))
-            
-        for photo in photos_urls:
-            if isinstance(photo, dict):
-                new_business.photos.append(Photo(**photo))
-            else:
-                new_business.photos.append(Photo(url=photo))
-                
-        if owners_ids:
-            owners = db.session.execute(select(User).where(User.id.in_(owners_ids))).scalars().all()
-            new_business.owners.extend(owners)
-            
-        if types_ids:
-            b_types = db.session.execute(select(BusinessType).where(BusinessType.id.in_(types_ids))).scalars().all()
-            new_business.business_types.extend(b_types)
-
-        db.session.add(new_business)
-        db.session.commit()
-        return True, "Negócio criado com sucesso.", 201
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Erro ao criar negócio: {str(e)}", 500
-
-def get_business(business_id: int) -> Optional[Business]:
-    stmt = select(Business).where(Business.id == business_id, Business.is_active == True)
-    return db.session.execute(stmt).scalar_one_or_none()
-
-def update_business(business_id: int, data: Dict[str, Any]) -> Tuple[bool, str, int]:
-    business = get_business(business_id)
-    if not business:
-        return False, "Negócio não encontrado ou inativo.", 404
-        
-    try:
-        # Atualiza dados primitivos
-        for key, value in data.items():
-            if hasattr(business, key) and key not in ["id", "addresses", "photos", "owners", "business_types"]:
-                setattr(business, key, value)
-                
-        # Atualização dinâmica de relacionamentos (substituição completa)
-        if "addresses" in data:
-            business.addresses.clear()
-            for addr in data["addresses"]:
-                business.addresses.append(Address(**addr))
-                
-        if "photos" in data:
-            business.photos.clear()
-            for photo in data["photos"]:
-                p_data = photo if isinstance(photo, dict) else {"url": photo}
-                business.photos.append(Photo(**p_data))
-                
-        if "owners" in data:
-            business.owners.clear()
-            owners = db.session.execute(select(User).where(User.id.in_(data["owners"]))).scalars().all()
-            business.owners.extend(owners)
-            
-        if "business_types" in data:
-            business.business_types.clear()
-            b_types = db.session.execute(select(BusinessType).where(BusinessType.id.in_(data["business_types"]))).scalars().all()
-            business.business_types.extend(b_types)
-                
-        db.session.commit()
-        return True, "Negócio atualizado com sucesso.", 200
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Erro ao atualizar negócio: {str(e)}", 500
-
-def delete_business(business_id: int) -> Tuple[bool, str, int]:
-    business = get_business(business_id)
-    if not business:
-        return False, "Negócio não encontrado.", 404
-        
-    try:
-        # Soft delete para negócio (Note que is_active é um booleano real aqui)
-        business.is_active = False 
-        db.session.commit()
-        return True, "Negócio desativado com sucesso.", 200
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Erro ao desativar negócio: {str(e)}", 500
-
-def get_all_businesses() -> List[Business]:
-    stmt = select(Business).where(Business.is_active == True)
-    return list(db.session.execute(stmt).scalars().all())
 
 # ==========================================================
-# GERENCIAMENTO DE AUTENTICAÇÃO
+# GERENCIAMENTO DE AUTENTICAÇÃO E CREDENCIAIS SEGURAS
 # ==========================================================
 
 def login(email: str, password: str, expected_role: str) -> Tuple[bool, str, int, Optional[User]]:
-    """Autentica validando senha, role, e se a conta está ativa."""
     try:
         stmt = select(User).join(Role).where(
             User.email == email, 
@@ -372,4 +303,24 @@ def login(email: str, password: str, expected_role: str) -> Tuple[bool, str, int
         return True, "Login bem-sucedido.", 200, user
         
     except SQLAlchemyError as e:
-        return False, f"Erro no servidor: {str(e)}", 500, None
+        return False, f"Erro interno no servidor: {str(e)}", 500, None
+
+def change_user_password(user_id: int, old_password: str, new_password: str) -> Tuple[bool, str, int]:
+    """Serviço dedicado e seguro para alteração interna de senhas via validação cruzada."""
+    try:
+        stmt = select(User).where(User.id == user_id, User.is_active == True)
+        user = db.session.execute(stmt).scalar_one_or_none()
+        
+        if not user:
+            return False, "Usuário inválido ou inativo.", 404
+            
+        if not check_password_hash(user.password, old_password):
+            return False, "Senha atual incorreta.", 401
+            
+        user.password = generate_password_hash(new_password)
+        db.session.commit()
+        return True, "Senha modificada com sucesso.", 200
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return False, f"Erro ao alterar credenciais: {str(e)}", 500

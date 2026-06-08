@@ -1,34 +1,67 @@
-{% extends 'base.html' %}
-{% block title %}Painel do Restaurante - Tasty{% endblock %}
+{% extends 'layouts/base.html' %}
+
+{% block title %}Painel do Parceiro - Tasty{% endblock %}
+
+{% block navbar %}
+    {% include 'layouts/navbar_owner.html' %}
+{% endblock %}
 
 {% block content %}
-{% include 'partials/navbar.html' %}
-
-<main class="min-h-screen bg-gray-100 py-10 px-6">
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-10">
+<main class="min-h-screen bg-gray-50 py-10 px-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between">
             <div>
-                <h1 class="text-3xl font-black text-darker">Meus Negócios</h1>
-                <p class="text-gray-500">Gerencie seus restaurantes e veja seus matches.</p>
+                <h1 class="text-3xl font-black text-darker">Resumo do Negócio</h1>
+                <p class="text-gray-500 mt-1">Acompanhe o desempenho dos seus restaurantes no Tasty.</p>
             </div>
-            <div class="flex gap-4">
-                <button class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-bold transition-all">
-                    + Novo Negócio
-                </button>
-                <a href="{{ url_for('auth.logout') }}" class="px-6 py-2 rounded-lg font-bold border border-gray-300 hover:bg-gray-200 transition-all">Sair</a>
+            <div class="mt-4 md:mt-0 flex gap-3">
+                <a href="{{ url_for('owner.edit_owner', id=session.get('user_id')) }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-4 rounded shadow-sm transition-colors">
+                    Meu Perfil
+                </a>
+                <a href="{{ url_for('business_panel.register_business') }}" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded shadow-sm transition-colors flex items-center gap-2">
+                    <span>+</span> Novo Restaurante
+                </a>
             </div>
-        </header>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Matches Hoje</div>
-                <div class="text-4xl font-black text-primary">124</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-primary">
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Visualizações no Feed</h3>
+                <p class="text-4xl font-black text-gray-800">12.4k</p>
+                <p class="text-green-500 text-sm font-bold mt-2">↑ 18% esta semana</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Visualizações</div>
-                <div class="text-4xl font-black text-darker">892</div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-green-500">
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Matches (Likes)</h3>
+                <p class="text-4xl font-black text-gray-800">3,205</p>
+                <p class="text-green-500 text-sm font-bold mt-2">↑ 5% esta semana</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-blue-500">
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Taxa de Conversão</h3>
+                <p class="text-4xl font-black text-gray-800">25.8%</p>
+                <p class="text-gray-400 text-sm font-bold mt-2">Dos views viraram match</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-lg font-bold text-gray-800">Gestão Rápida</h2>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="{{ url_for('business_panel.list_my_businesses') }}" class="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-orange-50 transition-all group">
+                    <div class="w-12 h-12 bg-gray-100 group-hover:bg-white rounded-full flex items-center justify-center text-2xl">🏪</div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 group-hover:text-primary">Meus Restaurantes</h4>
+                        <p class="text-sm text-gray-500">Edite cardápios, fotos e horários.</p>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
 </main>
+{% endblock %}
+
+{% block footer %}
+    {% include 'layouts/footer.html' %}
 {% endblock %}

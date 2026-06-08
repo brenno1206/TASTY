@@ -1,6 +1,6 @@
 from typing import Optional, TYPE_CHECKING
+from sqlalchemy import ForeignKey, Integer, String, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, Integer, String
 from tasty.ext.db import db
 
 if TYPE_CHECKING:
@@ -9,24 +9,27 @@ if TYPE_CHECKING:
     from .city import City
 
 class Address(db.Model):
-    __tablename__ = "addresses"  # Usando plural como padrão
-    __table_args__ = {'extend_existing': True}
+    __tablename__ = "addresses"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    road: Mapped[Optional[str]] = mapped_column(String(100))
-    number: Mapped[Optional[int]] = mapped_column(Integer)
-    district: Mapped[Optional[str]] = mapped_column(String(100))
-    zipcode: Mapped[Optional[str]] = mapped_column(String(15))
+    road: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    district: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    zipcode: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
+    
+    # Coordenadas geográficas cruciais para cálculo de distância física (Algoritmo de Match por Proximidade)
+    latitude: Mapped[Optional[float]] = mapped_column(Numeric(10, 8), nullable=True)
+    longitude: Mapped[Optional[float]] = mapped_column(Numeric(11, 8), nullable=True)
 
-    # FKs
+    # Chaves Estrangeiras
     user_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=True
     )
     business_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("businesses.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("businesses.id", ondelete="CASCADE"), index=True, nullable=True
     )
     city_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("cities.id", ondelete="SET NULL")
+        Integer, ForeignKey("cities.id", ondelete="SET NULL"), index=True, nullable=True
     )
 
     # Relacionamentos

@@ -1,107 +1,136 @@
-{% extends "base.html" %}
+{% extends 'layouts/base.html' %}
 
-{% block title %}Onboarding - Tasty{% endblock %}
+{% block title %}Complete seu Perfil - Tasty{% endblock %}
+
+{% block navbar %}
+    {% include 'layouts/navbar_client.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center p-6">
-    <div class="w-full max-w-3xl bg-white rounded-2xl shadow p-8 space-y-8">
-
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Bem-vindo ao Tasty 👋</h1>
-            <p class="text-gray-600">Vamos configurar seu perfil para melhorar suas recomendações.</p>
+<main class="min-h-screen bg-gray-50 py-10 px-6">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-darker">Bem-vindo ao Tasty!</h1>
+            <p class="text-gray-500 mt-2">Para encontrar os melhores restaurantes perto de você, precisamos de algumas informações finais.</p>
         </div>
 
-        <!-- =========================
-             PREFERÊNCIAS
-        ========================== -->
-        <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">
-                O que você gosta de ver?
-            </h2>
+        <div class="bg-white rounded-xl shadow-md border-t-4 border-primary p-8">
+            <meta name="csrf-token" content="{{ csrf_token() }}">
+            <form id="onboarding-form" class="space-y-8">
+                
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">O que você gosta de comer?</h2>
+                    <p class="text-sm text-gray-500 mb-4">Selecione suas preferências para recebermos recomendações melhores.</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {% if business_types %}
+                            {% for type in business_types %}
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="preferences" value="{{ type.id }}" class="peer sr-only">
+                                <div class="p-3 border-2 rounded-lg text-center font-bold peer-checked:border-primary peer-checked:bg-orange-50 hover:bg-gray-50 transition-all text-sm">
+                                    {{ type.emoji or '🍽️' }} {{ type.name }}
+                                </div>
+                            </label>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-span-full p-4 bg-yellow-50 text-yellow-700 font-bold rounded border border-yellow-200">
+                                ⚠️ Nenhuma categoria cadastrada no banco de dados.<br>
+                                <span class="text-sm font-normal">Crie categorias via terminal ou painel admin para prosseguir.</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {% for type in business_types %}
-                <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input type="checkbox" value="{{ type.id }}" class="pref-checkbox accent-orange-500">
-                    <span class="text-sm text-gray-700">{{ type.name }}</span>
-                </label>
-                {% endfor %}
-            </div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Onde você está?</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Rua/Avenida <span class="text-red-500">*</span></label>
+                            <input type="text" id="road" required class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Número</label>
+                            <input type="number" id="number" class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Bairro <span class="text-red-500">*</span></label>
+                            <input type="text" id="district" required class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">CEP</label>
+                            <input type="text" id="zipcode" class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end">
+                    <button type="submit" id="btn-submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors w-full md:w-auto">
+                        Concluir Perfil
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <!-- =========================
-             ENDEREÇO
-        ========================== -->
-        <div>
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">
-                Onde você está?
-            </h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input id="road" type="text" placeholder="Rua"
-                    class="border rounded-lg p-3 w-full">
-
-                <input id="number" type="number" placeholder="Número"
-                    class="border rounded-lg p-3 w-full">
-
-                <input id="district" type="text" placeholder="Bairro"
-                    class="border rounded-lg p-3 w-full">
-
-                <input id="zipcode" type="text" placeholder="CEP"
-                    class="border rounded-lg p-3 w-full">
-
-                <input id="city_id" type="number" placeholder="ID da cidade"
-                    class="border rounded-lg p-3 w-full md:col-span-2">
-            </div>
-        </div>
-
-        <!-- BOTÃO -->
-        <button
-            onclick="submitOnboarding()"
-            class="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-primary-dark transition">
-            Finalizar onboarding
-        </button>
-
     </div>
-</div>
+</main>
+{% endblock %}
 
+{% block scripts %}
 <script>
-async function submitOnboarding() {
-    const preferences = Array.from(
-        document.querySelectorAll(".pref-checkbox:checked")
-    ).map(el => parseInt(el.value));
+document.getElementById('onboarding-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
 
-    const address = {
-        road: document.getElementById("road").value,
-        number: parseInt(document.getElementById("number").value),
-        district: document.getElementById("district").value,
-        zipcode: document.getElementById("zipcode").value,
-        city_id: parseInt(document.getElementById("city_id").value),
+    // Extração Array de Checkboxes
+    const prefs = Array.from(document.querySelectorAll('input[name="preferences"]:checked')).map(el => parseInt(el.value));
+    
+    // Trava de Segurança em Tela
+    if (prefs.length === 0) {
+        alert("Por favor, selecione pelo menos um tipo de comida que você gosta!");
+        return;
+    }
+
+    btn.innerText = 'Salvando...';
+    btn.disabled = true;
+    
+    const payload = {
+        preferences: prefs,
+        address: {
+            road: document.getElementById('road').value,
+            number: parseInt(document.getElementById('number').value) || null,
+            district: document.getElementById('district').value,
+            zipcode: document.getElementById('zipcode').value
+        }
     };
 
     try {
-        const response = await fetch("/client/onboarding", {
-            method: "POST",
+        const response = await fetch("{{ url_for('client.save_onboarding') }}", {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify({
-                preferences,
-                address
-            })
+            body: JSON.stringify(payload)
         });
 
         const data = await response.json();
-
+        
         if (response.ok) {
-            window.location.href = "/dashboard";
+            window.location.href = "{{ url_for('discovery.feed') }}";
         } else {
-            alert(data.error || "Erro ao salvar onboarding");
+            alert("Erro: " + (data.error || "Tente novamente."));
+            btn.innerText = 'Concluir Perfil';
+            btn.disabled = false;
         }
-    } catch (err) {
-        alert("Erro de conexão com o servidor");
-        console.error(err);
+    } catch (error) {
+        console.error('Fetch error:', error);
+        alert("Erro na conexão.");
+        btn.innerText = 'Concluir Perfil';
+        btn.disabled = false;
     }
-}
+});
 </script>
 {% endblock %}

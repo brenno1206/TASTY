@@ -1,25 +1,17 @@
-{% extends 'base.html' %}
+{% extends 'layouts/base.html' %}
 {% block title %}Criar Conta - Tasty{% endblock %}
 
-{% block content %}
-{% include 'partials/navbar.html' %}
+{% block navbar %}
+    {% include 'layouts/navbar.html' %}
+{% endblock %}
 
+{% block content %}
 <main class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-6">
     <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg border-t-4 border-primary">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-black text-darker">Crie sua Conta</h1>
             <p class="text-gray-500 mt-2">Junte-se ao Tasty e comece a explorar.</p>
         </div>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="mb-4 p-4 rounded-lg text-sm font-bold {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
 
         <form action="{{ url_for('auth.register') }}" method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -78,4 +70,8 @@
         </p>
     </div>
 </main>
+{% endblock %}
+
+{% block footer %}
+    {% include 'layouts/footer.html' %}
 {% endblock %}

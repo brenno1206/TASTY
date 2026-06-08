@@ -1,0 +1,29 @@
+<nav class="bg-dark text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            
+            <div class="flex items-center space-x-4">
+                <a href="{{ url_for('admin.dashboard') }}" class="text-2xl font-extrabold text-primary tracking-tighter">
+                    Tasty<span class="text-white">.</span>
+                </a>
+                <span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-widest hidden sm:inline-block">
+                    Painel Admin
+                </span>
+            </div>
+
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="{{ url_for('admin.dashboard') }}" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">Dashboard</a>
+                <a href="{{ url_for('admin.list_admins') }}" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">Equipe</a>
+                <a href="{{ url_for('client.list_clients') }}" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">Clientes</a>
+                <a href="{{ url_for('owner.list_owners') }}" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">Parceiros</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-400 hidden sm:block">Olá, {{ session.get('user_name', 'Admin') }}</span>
+                <a href="{{ url_for('auth.logout') }}" class="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 rounded text-sm transition-colors border border-gray-700">
+                    Sair
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
