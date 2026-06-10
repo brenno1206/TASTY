@@ -2,74 +2,83 @@ from flask import (
     Blueprint, render_template, flash, redirect, url_for, request, session
 )
 import tasty.services.user_service as service
+from tasty.forms import LoginForm, RegisterForm
 
 bp_auth = Blueprint("auth", __name__, url_prefix="/auth")
 
 @bp_auth.route("/login", methods=["GET", "POST"])
 def login():
-    # Se já estiver logado, redireciona para o painel correto da sua role
     if "user_id" in session:
         role = session.get("user_role", "client")
         return redirect(url_for(f"{role}.dashboard"))
 
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        # Espera-se que o formulário de login possua um select/hidden para o tipo de acesso
-        role = request.form.get("role", "client") 
+    form = LoginForm()
 
-        success, msg, code, user = service.login(email, password, role)
+    if form.validate_on_submit():
+        # Passamos apenas e-mail e senha para o serviço unificado
+        success, msg, code, user = service.login(
+            email=form.email.data, 
+            password=form.password.data
+        )
         
         if success and user:
-            session.clear() # Prevenção contra fixação de sessão
+            session.clear()
+            session.permanent = True 
+            
+            # Captura a role real que está gravada no banco de dados do usuário
+            user_role = user.role.name.lower()
+            
             session["user_id"] = user.id
-            session["user_role"] = role
+            session["user_role"] = user_role
             session["user_name"] = user.name
             
-            flash(f"Bem-vindo, {user.name}!", "success")
+            flash(f"Bem-vindo de volta, {user.name}!", "success")
             
-            # Redirecionamento dinâmico seguro pós-login
             next_page = request.args.get("next")
-            if next_page:
-                return redirect(next_page)
-            return redirect(url_for(f"{role}.dashboard"))
+            return redirect(next_page or url_for(f"{user_role}.dashboard"))
             
         else:
+            # Renderiza os erros consistentes ('Usuário não encontrado', 'Senha incorreta') na div flash
             flash(msg, "danger")
 
-    return render_template("auth/login.html")
-
+    return render_template("auth/login.html", form=form)
 
 @bp_auth.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == "POST":
+    # 1. Trava de Segurança: Usuário já logado não pode criar conta
+    if "user_id" in session:
+        flash("Você já está conectado. Saia da sua conta atual para criar uma nova.", "info")
+        role = session.get("user_role", "client")
+        return redirect(url_for(f"{role}.dashboard"))
+
+    form = RegisterForm()
+
+    if form.validate_on_submit():
         data = {
-            "name": request.form.get("name"),
-            "email": request.form.get("email"),
-            "password": request.form.get("password"),
-            "cpf": request.form.get("cpf"),
-            "phone": request.form.get("phone")
+            "name": form.name.data,
+            "email": form.email.data,
+            "password": form.password.data,
+            "cpf": form.cpf.data,
+            "phone": form.phone.data
         }
         
-        # Define se está criando um cliente ou um dono de negócio
-        role_choice = request.form.get("role", "client")
-        
-        if role_choice == "owner":
+        if form.role.data == "owner":
             success, msg, code = service.create_business_owner(data)
         else:
             success, msg, code = service.create_client(data)
 
         if success:
-            flash("Conta criada com sucesso! Faça seu login.", "success")
+            flash("Conta criada com sucesso! Faça seu login para continuar.", "success")
             return redirect(url_for("auth.login"))
         else:
             flash(msg, "danger")
 
-    return render_template("auth/register.html")
+    return render_template("auth/register.html", form=form)
 
 
 @bp_auth.route("/logout")
 def logout():
+    """Destrói ativamente a sessão do usuário."""
     session.clear()
-    flash("Você saiu com sucesso.", "info")
-    return redirect(url_for("auth.login"))
+    flash("Sessão encerrada com segurança.", "info")
+    return redirect(url_for("main.index"))

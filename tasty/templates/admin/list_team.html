@@ -10,14 +10,19 @@
 <main class="min-h-screen bg-gray-50 py-10 px-6">
     <div class="max-w-7xl mx-auto">
         
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
                 <h1 class="text-2xl font-black text-darker">Equipe de Administração</h1>
                 <p class="text-gray-500 text-sm mt-1">Gerencie os usuários com acesso total ao sistema.</p>
             </div>
-            <a href="{{ url_for('admin.create_admin') }}" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-6 rounded shadow transition-colors flex items-center gap-2">
-                <span>+</span> Novo Administrador
-            </a>
+            <div class="flex gap-3">
+                <a href="{{ url_for('admin_panel.index') }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-6 rounded shadow transition-colors flex items-center gap-2">
+                    Painel Técnico ↗
+                </a>
+                <a href="{{ url_for('user.create_view') }}" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-6 rounded shadow transition-colors flex items-center gap-2">
+                    <span>+</span> Novo Administrador
+                </a>
+            </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -50,11 +55,15 @@
                                         </span>
                                     {% endif %}
                                 </td>
-                                <td class="py-4 px-6 text-right flex justify-end gap-3">
+                                <td class="py-4 px-6 text-right flex justify-end items-center gap-4">
+                                    <a href="{{ url_for('user.edit_view', id=u.id) }}" class="text-gray-500 hover:text-primary text-xs font-bold transition-colors" title="Ver no Flask-Admin">
+                                        ⚙️ Flask-Admin
+                                    </a>
+                                    
                                     <a href="{{ url_for('admin.edit_admin', id=u.id) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
                                         Editar
                                     </a>
-                                    <form action="{{ url_for('admin.delete_admin', id=u.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja desativar este administrador?');">
+                                    <form action="{{ url_for('admin.delete_admin', id=u.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja desativar este administrador?');" class="inline">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium transition-colors">
                                             Desativar

@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from datetime import timedelta
 
 load_dotenv(".env.dev", override=True)
 
@@ -53,3 +54,13 @@ def init_app(app):
             'flask_debugtoolbar.panels.logger.LoggingPanel',
             'flask_debugtoolbar.panels.route_list.RouteListDebugPanel',
         )
+
+    # ---------------------------------------------------------
+    # SEGURANÇA E SESSÃO
+    # ---------------------------------------------------------
+    # Define o tempo de vida da sessão (ex: 2 horas)
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
+    
+    # Proteções adicionais contra interceptação de cookies
+    app.config['SESSION_COOKIE_HTTPONLY'] = True 
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'

@@ -285,25 +285,37 @@ def get_all_business_owners() -> List[User]:
 # GERENCIAMENTO DE AUTENTICAÇÃO E CREDENCIAIS SEGURAS
 # ==========================================================
 
-def login(email: str, password: str, expected_role: str) -> Tuple[bool, str, int, Optional[User]]:
+def login(email: str, password: str) -> Tuple[bool, str, int, Optional[User]]:
+    """
+    Autentica um usuário de forma global baseando-se estritamente em e-mail e senha.
+    Retorna erros explícitos e consistentes para cada falha no processo.
+    """
     try:
-        stmt = select(User).join(Role).where(
-            User.email == email, 
-            Role.name == expected_role,
-            User.is_active == True
-        )
+        # Busca o usuário apenas pelo e-mail, trazendo junto o relacionamento da Role
+        stmt = select(User).where(User.email == email)
         user = db.session.execute(stmt).scalar_one_or_none()
         
+        # Caso 1: Usuário não existe no banco de dados
         if not user:
-            return False, "Usuário inativo, não encontrado ou papel incorreto.", 404, None
+            return False, "Usuário não encontrado. Verifique o e-mail digitado ou cadastre-se.", 404, None
             
+        # Caso 2: O usuário existe, mas foi desativado (soft delete)
+        if not user.is_active:
+            return False, "Esta conta foi desativada pelo administrador do sistema.", 403, None
+            
+        # Caso 3: Senha incorreta
         if not check_password_hash(user.password, password):
-            return False, "Credenciais inválidas.", 401, None
+            return False, "Senha incorreta. Tente novamente.", 401, None
             
+        # Caso 4: Usuário não possui uma role atrelada (erro de integridade do banco)
+        if not user.role:
+            return False, "Sua conta está sem perfil de acesso definido. Contate o suporte.", border_t-4, None
+            
+        # Sucesso absoluto: retorna o objeto de usuário completo
         return True, "Login bem-sucedido.", 200, user
         
     except SQLAlchemyError as e:
-        return False, f"Erro interno no servidor: {str(e)}", 500, None
+        return False, f"Erro interno de comunicação com o banco de dados: {str(e)}", 500, None
 
 def change_user_password(user_id: int, old_password: str, new_password: str) -> Tuple[bool, str, int]:
     """Serviço dedicado e seguro para alteração interna de senhas via validação cruzada."""

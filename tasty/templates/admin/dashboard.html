@@ -14,12 +14,17 @@
                 <h1 class="text-3xl font-black text-darker">Visão Geral do Sistema</h1>
                 <p class="text-gray-500 mt-1">Acompanhe as métricas e gerencie a plataforma Tasty.</p>
             </div>
-            <div class="mt-4 md:mt-0 flex gap-3">
+            <div class="mt-4 md:mt-0 flex gap-3 flex-wrap">
+                <a href="{{ url_for('admin_panel.index') }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-4 rounded shadow-sm transition-colors flex items-center gap-2">
+                    Painel Técnico <span>↗</span>
+                </a>
+                
                 <a href="{{ url_for('admin.list_admins') }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2 px-4 rounded shadow-sm transition-colors">
                     Gerenciar Equipe
                 </a>
-                <a href="{{ url_for('owner.list_owners') }}" class="bg-dark hover:bg-darker text-white font-bold py-2 px-4 rounded shadow-sm transition-colors">
-                    Ver Restaurantes
+                
+                <a href="{{ url_for('business.index_view') }}" class="bg-dark hover:bg-darker text-white font-bold py-2 px-4 rounded shadow-sm transition-colors flex items-center gap-2">
+                    Ver Restaurantes <span>↗</span>
                 </a>
             </div>
         </div>
@@ -27,32 +32,34 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
                 <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Clientes Ativos</h3>
-                <p class="text-3xl font-black text-gray-800">1,248</p>
-                <p class="text-green-500 text-xs font-bold mt-2">+12% este mês</p>
+                <p class="text-3xl font-black text-gray-800">{{ stats.total_clients }}</p>
+                <p class="text-green-500 text-xs font-bold mt-2">Usuários consumidores</p>
             </div>
             
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-primary">
                 <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Restaurantes</h3>
-                <p class="text-3xl font-black text-gray-800">342</p>
-                <p class="text-green-500 text-xs font-bold mt-2">+5 novos hoje</p>
+                <p class="text-3xl font-black text-gray-800">{{ stats.total_businesses }}</p>
+                <p class="text-green-500 text-xs font-bold mt-2">Filiais operacionais</p>
             </div>
             
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-red-500">
                 <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Swipes (Matches)</h3>
-                <p class="text-3xl font-black text-gray-800">84.5K</p>
+                <p class="text-3xl font-black text-gray-800">{{ stats.total_swipes }}</p>
                 <p class="text-gray-400 text-xs font-bold mt-2">Volume total processado</p>
             </div>
             
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-green-500">
                 <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Status do Servidor</h3>
                 <p class="text-3xl font-black text-green-500">Online</p>
-                <p class="text-gray-400 text-xs font-bold mt-2">Latência: 45ms</p>
+                <p class="text-gray-400 text-xs font-bold mt-2">Conexão BD Estável</p>
             </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
             <h2 class="text-xl font-bold mb-6">Módulos Administrativos</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
                 <a href="{{ url_for('client.list_clients') }}" class="group block p-6 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all">
                     <div class="text-3xl mb-3">🍔</div>
                     <h3 class="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">Consumidores</h3>
@@ -60,9 +67,21 @@
                 </a>
 
                 <a href="{{ url_for('owner.list_owners') }}" class="group block p-6 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all">
-                    <div class="text-3xl mb-3">🏪</div>
+                    <div class="text-3xl mb-3">🤝</div>
                     <h3 class="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">Parceiros Comerciais</h3>
                     <p class="text-sm text-gray-500 mt-2">Auditar donos de restaurantes e controlar acessos ao painel de negócios.</p>
+                </a>
+
+                <a href="{{ url_for('admin.list_all_businesses') }}" class="group block p-6 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all">
+                    <div class="text-3xl mb-3">🏪</div>
+                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">Restaurantes (Geral)</h3>
+                    <p class="text-sm text-gray-500 mt-2">Visualizar, auditar e controlar todas as filiais cadastradas na plataforma.</p>
+                </a>
+
+                <a href="{{ url_for('admin.manage_business_types') }}" class="group block p-6 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all">
+                    <div class="text-3xl mb-3">🏷️</div>
+                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">Tags Gastronômicas</h3>
+                    <p class="text-sm text-gray-500 mt-2">Criar e editar as categorias (Japonesa, Pizzaria, etc.) usadas no aplicativo.</p>
                 </a>
 
                 <a href="{{ url_for('admin.list_admins') }}" class="group block p-6 border border-gray-200 rounded-lg hover:border-primary hover:shadow-md transition-all bg-gray-50">
@@ -70,6 +89,7 @@
                     <h3 class="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">Administradores</h3>
                     <p class="text-sm text-gray-500 mt-2">Gerenciar privilégios, adicionar ou remover membros da equipe interna.</p>
                 </a>
+                
             </div>
         </div>
     </div>

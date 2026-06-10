@@ -2,12 +2,8 @@ from flask import Flask
 import logging
 from tasty.ext.cli import init_app as init_cli
 
-
 def create_app(test_config=None):
     app = Flask(__name__)
-
-    # Configuracao recomendada para desenvolvimento:
-    # Mostra mensagens DEBUG e INFO no console
 
     if app.debug:
         app.logger.setLevel(logging.DEBUG)
@@ -15,7 +11,6 @@ def create_app(test_config=None):
     # ----------------------------------------------------------
     # Configuracao da aplicacao (variaveis de ambiente)
     # ----------------------------------------------------------
-
     from tasty.ext.config import init_app as init_config
     init_config(app)
 
@@ -25,19 +20,22 @@ def create_app(test_config=None):
     # ----------------------------------------------------------
     # Inicializacao do banco de dados
     # ----------------------------------------------------------
-
     from tasty.ext.db import init_app as init_db
     init_db(app)
 
-    # Registro dos modelos no metadata do SQLAlchemy
     from tasty.ext.db import register_models
     register_models()
     
-    init_cli(app)
+    # ----------------------------------------------------------
+    # Painel Administrativo Automático (Flask-Admin)
+    # ----------------------------------------------------------
+    from tasty.ext.admin import init_app as init_admin
+    init_admin(app)
 
     # ----------------------------------------------------------
     # Outras extensoes
     # ----------------------------------------------------------
+    init_cli(app)
     
     if not app.config.get("TESTING"):
         from tasty.ext.wtf import init_app as init_wtf
@@ -49,7 +47,6 @@ def create_app(test_config=None):
     # ----------------------------------------------------------
     # Blueprints (camada de apresentacao)
     # ----------------------------------------------------------
-    
     from tasty.views import init_app as init_webpage
     init_webpage(app)
 

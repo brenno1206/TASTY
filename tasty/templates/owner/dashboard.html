@@ -26,21 +26,21 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-primary">
-                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Visualizações no Feed</h3>
-                <p class="text-4xl font-black text-gray-800">12.4k</p>
-                <p class="text-green-500 text-sm font-bold mt-2">↑ 18% esta semana</p>
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Visualizações Totais</h3>
+                <p class="text-4xl font-black text-gray-800">{{ stats.total_views }}</p>
+                <p class="text-gray-400 text-xs mt-2">Exibições nos baralhos dos clientes</p>
             </div>
             
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-green-500">
-                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Matches (Likes)</h3>
-                <p class="text-4xl font-black text-gray-800">3,205</p>
-                <p class="text-green-500 text-sm font-bold mt-2">↑ 5% esta semana</p>
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Matches Acumulados</h3>
+                <p class="text-4xl font-black text-gray-800">{{ stats.total_matches }}</p>
+                <p class="text-green-500 text-xs font-bold mt-2">Filiais ativas: {{ stats.active_stores }}</p>
             </div>
             
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-t-4 border-t-blue-500">
-                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Taxa de Conversão</h3>
-                <p class="text-4xl font-black text-gray-800">25.8%</p>
-                <p class="text-gray-400 text-sm font-bold mt-2">Dos views viraram match</p>
+                <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Conversão Média Geral</h3>
+                <p class="text-4xl font-black text-gray-800">{{ stats.avg_conversion_rate }}%</p>
+                <p class="text-gray-400 text-xs mt-2">Média de likes convertidos por view</p>
             </div>
         </div>
 
@@ -53,7 +53,7 @@
                     <div class="w-12 h-12 bg-gray-100 group-hover:bg-white rounded-full flex items-center justify-center text-2xl">🏪</div>
                     <div>
                         <h4 class="font-bold text-gray-800 group-hover:text-primary">Meus Restaurantes</h4>
-                        <p class="text-sm text-gray-500">Edite cardápios, fotos e horários.</p>
+                        <p class="text-sm text-gray-500">Edite localizações, fotos e horários.</p>
                     </div>
                 </a>
             </div>

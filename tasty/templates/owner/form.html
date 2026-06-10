@@ -1,22 +1,26 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}Meu Perfil - Tasty{% endblock %}
+{% block title %}Perfil do Parceiro - Tasty{% endblock %}
 
 {% block navbar %}
-    {% include 'layouts/navbar_owner.html' %}
+    {% if session.get('user_role') == 'admin' %}
+        {% include 'layouts/navbar_admin.html' %}
+    {% else %}
+        {% include 'layouts/navbar_owner.html' %}
+    {% endif %}
 {% endblock %}
 
 {% block content %}
 <main class="min-h-screen bg-gray-50 py-10 px-6">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-4xl mx-auto">
         
         <div class="mb-6 flex items-center gap-4">
-            <a href="{{ url_for('owner.dashboard') }}" class="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+            <a href="javascript:history.back()" class="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
                 &larr;
             </a>
             <div>
-                <h1 class="text-2xl font-black text-darker">Configurações da Conta</h1>
-                <p class="text-gray-500 text-sm">Atualize seus dados pessoais e de acesso.</p>
+                <h1 class="text-2xl font-black text-darker">Dados do Parceiro</h1>
+                <p class="text-gray-500 text-sm">Atualize os dados de acesso e visualize os estabelecimentos associados.</p>
             </div>
         </div>
 
@@ -26,7 +30,7 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Nome Completo</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Nome do Responsável</label>
                         <input type="text" name="name" value="{{ user.name }}" required class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
                     </div>
                     <div>
@@ -37,22 +41,63 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">E-mail</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">E-mail Comercial</label>
                         <input type="email" name="email" value="{{ user.email }}" readonly class="w-full px-4 py-2.5 rounded border border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Telefone / Celular</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Telefone de Contato</label>
                         <input type="text" name="phone" value="{{ user.phone or '' }}" class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-4 border-t border-gray-200 pt-6">
+                <div class="flex justify-end gap-4 pt-6">
                     <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded shadow transition-colors">
-                        Atualizar Perfil
+                        Salvar Alterações
                     </button>
                 </div>
             </form>
         </div>
+
+        {% if session.get('user_role') == 'admin' %}
+        <div class="mt-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span>🏪</span> Estabelecimentos Vinculados
+            </h2>
+            
+            {% if user.owned_businesses %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {% for b in user.owned_businesses %}
+                <div class="bg-white border border-gray-200 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-bold text-lg text-gray-800">{{ b.trade_name }}</h3>
+                            {% if b.is_active %}
+                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">Ativo</span>
+                            {% else %}
+                                <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">Inativo</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-xs text-gray-500 mb-1">CNPJ: {{ b.cnpj }}</p>
+                        {% if b.addresses %}
+                            <p class="text-xs text-gray-500">📍 {{ b.addresses[0].city.name if b.addresses[0].city else 'Sem cidade' }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <a href="{{ url_for('business.edit_view', id=b.id) }}" class="flex items-center justify-center gap-2 w-full bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 font-bold py-2 rounded transition-colors text-sm">
+                            ⚙️ Editar no Flask-Admin
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-xl text-sm font-medium">
+                Este parceiro ainda não cadastrou nenhum restaurante na plataforma.
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
 
     </div>
 </main>
