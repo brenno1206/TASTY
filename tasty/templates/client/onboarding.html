@@ -11,7 +11,7 @@
     <div class="max-w-3xl mx-auto">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-black text-darker">Bem-vindo ao Tasty!</h1>
-            <p class="text-gray-500 mt-2">Para encontrar os melhores restaurantes perto de você, precisamos de algumas informações finais.</p>
+            <p class="text-gray-500 mt-2">Para calcularmos as distâncias corretamente, precisamos de algumas informações.</p>
         </div>
 
         <div class="bg-white rounded-xl shadow-md border-t-4 border-primary p-8">
@@ -20,22 +20,19 @@
                 
                 <div>
                     <h2 class="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">O que você gosta de comer?</h2>
-                    <p class="text-sm text-gray-500 mb-4">Selecione suas preferências para recebermos recomendações melhores.</p>
-                    
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {% if business_types %}
                             {% for type in business_types %}
                             <label class="cursor-pointer">
                                 <input type="checkbox" name="preferences" value="{{ type.id }}" class="peer sr-only">
                                 <div class="p-3 border-2 rounded-lg text-center font-bold peer-checked:border-primary peer-checked:bg-orange-50 hover:bg-gray-50 transition-all text-sm">
-                                    {{ type.emoji or '🍽️' }} {{ type.name }}
+                                    {{ type.emoji | safe if type.emoji else '🍽️' }} {{ type.name }}
                                 </div>
                             </label>
                             {% endfor %}
                         {% else %}
                             <div class="col-span-full p-4 bg-yellow-50 text-yellow-700 font-bold rounded border border-yellow-200">
-                                ⚠️ Nenhuma categoria cadastrada no banco de dados.<br>
-                                <span class="text-sm font-normal">Crie categorias via terminal ou painel admin para prosseguir.</span>
+                                ⚠️ Nenhuma categoria cadastrada no banco de dados.
                             </div>
                         {% endif %}
                     </div>
@@ -55,7 +52,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Bairro <span class="text-red-500">*</span></label>
                             <input type="text" id="district" required class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
@@ -83,30 +80,37 @@
 document.getElementById('onboarding-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
-
-    // Extração Array de Checkboxes
-    const prefs = Array.from(document.querySelectorAll('input[name="preferences"]:checked')).map(el => parseInt(el.value));
     
-    // Trava de Segurança em Tela
-    if (prefs.length === 0) {
-        alert("Por favor, selecione pelo menos um tipo de comida que você gosta!");
-        return;
-    }
-
-    btn.innerText = 'Salvando...';
-    btn.disabled = true;
-    
-    const payload = {
-        preferences: prefs,
-        address: {
-            road: document.getElementById('road').value,
-            number: parseInt(document.getElementById('number').value) || null,
-            district: document.getElementById('district').value,
-            zipcode: document.getElementById('zipcode').value
-        }
-    };
-
+    // Tratamento de segurança contra erros ocultos no navegador
     try {
+        // Garantindo extração correta de NodeList
+        const checkBoxes = document.querySelectorAll('input[name="preferences"]');
+        const prefs = [];
+        
+        checkBoxes.forEach(box => {
+            if(box.checked) {
+                prefs.push(parseInt(box.value));
+            }
+        });
+
+        if (prefs.length === 0) {
+            alert("Por favor, selecione pelo menos um tipo de comida que você gosta!");
+            return;
+        }
+
+        btn.innerText = 'Salvando... Aguarde a leitura de mapa';
+        btn.disabled = true;
+        
+        const payload = {
+            preferences: prefs,
+            address: {
+                road: document.getElementById('road').value,
+                number: parseInt(document.getElementById('number').value) || null,
+                district: document.getElementById('district').value,
+                zipcode: document.getElementById('zipcode').value
+            }
+        };
+
         const response = await fetch("{{ url_for('client.save_onboarding') }}", {
             method: 'POST',
             headers: {
@@ -121,13 +125,14 @@ document.getElementById('onboarding-form').addEventListener('submit', async func
         if (response.ok) {
             window.location.href = "{{ url_for('discovery.feed') }}";
         } else {
-            alert("Erro: " + (data.error || "Tente novamente."));
+            alert("Falha de processamento: " + (data.error || "Ocorreu um erro no servidor."));
             btn.innerText = 'Concluir Perfil';
             btn.disabled = false;
         }
+
     } catch (error) {
         console.error('Fetch error:', error);
-        alert("Erro na conexão.");
+        alert("Erro no navegador. Por favor, recarregue a página e tente novamente.");
         btn.innerText = 'Concluir Perfil';
         btn.disabled = false;
     }

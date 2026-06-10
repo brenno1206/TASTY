@@ -21,9 +21,11 @@ dependencies = [
     "python-dotenv",
     "flask-wtf",
     "email-validator",
-    "flask-sqlalchemy",
-    "sqlalchemy",
+    "Flask-SQLAlchemy",
+    "SQLAlchemy",
     "flask_jwt_extended",
+    "psycopg2-binary",
+    "Werkzeug",
 ]
 
 [project.optional-dependencies]

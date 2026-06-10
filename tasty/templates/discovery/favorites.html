@@ -19,8 +19,8 @@
         {% if businesses %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for b in businesses %}
-            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-200 overflow-hidden transition-all group">
-                <div class="h-40 bg-gray-200 relative overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-200 overflow-hidden transition-all group flex flex-col">
+                <div class="h-40 bg-gray-200 relative overflow-hidden flex-shrink-0">
                     {% if b.photos %}
                         <img src="{{ b.photos[0].url }}" alt="{{ b.trade_name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                     {% else %}
@@ -29,10 +29,16 @@
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                     <h3 class="absolute bottom-3 left-4 font-bold text-white text-lg">{{ b.trade_name }}</h3>
                 </div>
-                <div class="p-4">
-                    <p class="text-sm text-gray-500 line-clamp-2 mb-3">{{ b.description or "Nenhuma descrição informada." }}</p>
-                    <a href="#" class="block w-full text-center bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold py-2 rounded-lg transition-colors">
-                        Ver Detalhes
+                <div class="p-5 flex flex-col flex-grow">
+                    <p class="text-sm text-gray-500 line-clamp-2 mb-3 flex-grow">{{ b.description or "Nenhuma descrição informada." }}</p>
+                    
+                    <p class="text-xs font-bold text-primary mb-4 bg-orange-50 inline-block px-3 py-1.5 rounded-full">
+                        📍 A {{ b.distance_km }} km de distância
+                    </p>
+                    
+                    <!-- Agora o link leva para a rota pública do restaurante -->
+                    <a href="{{ url_for('discovery.restaurant_details', id=b.id) }}" class="block w-full text-center bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold py-2.5 rounded-lg transition-colors text-sm mt-auto">
+                        Ver Detalhes do Match
                     </a>
                 </div>
             </div>

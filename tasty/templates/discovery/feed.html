@@ -11,9 +11,11 @@
     
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <div class="w-full max-w-sm h-[600px] relative flex flex-col items-center">
+    <!-- O Container Base foi aumentado de max-w-sm para max-w-md e ficou mais alto -->
+    <div class="w-full max-w-md h-[700px] relative flex flex-col items-center px-4">
         
-        <div id="card-deck" class="relative w-full h-[500px] w-full max-w-[360px]">
+        <!-- O baralho cresceu de 500px para 600px -->
+        <div id="card-deck" class="relative w-full h-[600px] max-w-[400px]">
             {% if businesses %}
                 {% for business in businesses %}
                     {% include 'partials/restaurant_card.html' %}
@@ -22,7 +24,7 @@
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl shadow-md border border-gray-200">
                     <span class="text-6xl mb-4">😢</span>
                     <h3 class="text-2xl font-bold text-gray-800 mb-2">Acabaram os restaurantes!</h3>
-                    <p class="text-gray-500 mb-6">Você já viu todas as opções disponíveis no momento.</p>
+                    <p class="text-gray-500 mb-6">Você já viu todas as opções disponíveis no raio de alcance.</p>
                     <form action="{{ url_for('discovery.reset_history') }}" method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 shadow-md">
@@ -34,7 +36,7 @@
         </div>
 
         {% if businesses %}
-        <div class="flex justify-center items-center gap-6 mt-8">
+        <div class="flex justify-center items-center gap-6 mt-6">
             <button id="btn-nope" class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 text-red-500 text-3xl hover:bg-red-50 hover:scale-110 transition-all focus:outline-none">
                 ✖
             </button>
@@ -59,27 +61,21 @@
         
         if (!cards.length) return;
 
-        // Configura o z-index inicial para empilhar o primeiro por cima
         cards.forEach((card, index) => {
             card.style.zIndex = cards.length - index;
-            // Inicializa a transição
             setTimeout(() => card.style.transition = 'transform 0.3s ease-out', 10);
         });
 
-        // Controle de Estado
         let activeCard = cards[0];
         let isDragging = false;
         let startX = 0, currentX = 0;
-
-        const swipeThreshold = 100; // Pixels necessários para considerar um match/nope
+        const swipeThreshold = 100;
 
         function initDragEvents(card) {
-            // Touch Events (Mobile)
             card.addEventListener("touchstart", handleDragStart, {passive: true});
             card.addEventListener("touchmove", handleDragMove, {passive: true});
             card.addEventListener("touchend", handleDragEnd);
 
-            // Mouse Events (Desktop)
             card.addEventListener("mousedown", handleDragStart);
             document.addEventListener("mousemove", handleDragMove);
             document.addEventListener("mouseup", handleDragEnd);
@@ -89,7 +85,7 @@
             if (!activeCard) return;
             isDragging = true;
             startX = e.type.includes("mouse") ? e.pageX : e.touches[0].clientX;
-            activeCard.style.transition = "none"; // Remove animação durante o arraste manual
+            activeCard.style.transition = "none";
             activeCard.classList.remove("cursor-grab");
             activeCard.classList.add("cursor-grabbing");
         }
@@ -99,12 +95,10 @@
             
             const x = e.type.includes("mouse") ? e.pageX : e.touches[0].clientX;
             currentX = x - startX;
-            
-            // Rotação suave baseada na distância
             const rotate = currentX * 0.05;
+            
             activeCard.style.transform = `translate(${currentX}px, 0) rotate(${rotate}deg)`;
 
-            // Opacidade visual dos Badges
             const opacity = Math.min(Math.abs(currentX) / swipeThreshold, 1);
             if (currentX > 0) {
                 activeCard.querySelector(".badge-like").style.opacity = opacity;
@@ -127,7 +121,6 @@
             } else if (currentX < -swipeThreshold) {
                 swipeOut("left");
             } else {
-                // Reseta a posição se não arrastou o suficiente
                 activeCard.style.transform = "translate(0, 0) rotate(0)";
                 activeCard.querySelector(".badge-like").style.opacity = 0;
                 activeCard.querySelector(".badge-nope").style.opacity = 0;
@@ -139,14 +132,11 @@
             const translationX = direction === "right" ? window.innerWidth : -window.innerWidth;
             const businessId = activeCard.dataset.id;
             
-            // Animação de saída
             activeCard.style.transform = `translate(${translationX}px, -100px) rotate(${direction === "right" ? 30 : -30}deg)`;
             activeCard.style.opacity = "0";
 
-            // Envio para o Back-end
             sendSwipeData(businessId, direction === "right", superLike);
 
-            // Remove o card antigo e prepara o próximo
             setTimeout(() => {
                 activeCard.remove();
                 updateActiveCard();
@@ -160,7 +150,7 @@
                 initDragEvents(activeCard);
             } else {
                 activeCard = null;
-                window.location.reload(); // Recarrega para mostrar a tela final de 'acabaram os restaurantes'
+                window.location.reload();
             }
         }
 
@@ -169,7 +159,7 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken // Prevenção Flask-WTF
+                    "X-CSRFToken": csrfToken
                 },
                 body: JSON.stringify({
                     business_id: parseInt(businessId),
@@ -181,12 +171,10 @@
             .catch(err => console.error("Erro no swipe:", err));
         }
 
-        // Botões Nativos
         document.getElementById("btn-nope").addEventListener("click", () => activeCard && swipeOut("left"));
         document.getElementById("btn-like").addEventListener("click", () => activeCard && swipeOut("right"));
         document.getElementById("btn-super").addEventListener("click", () => activeCard && swipeOut("right", true));
 
-        // Inicializa eventos no primeiro cartão
         initDragEvents(activeCard);
     });
 </script>
