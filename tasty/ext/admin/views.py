@@ -12,7 +12,7 @@ class SecureModelView(ModelView):
 
     def is_accessible(self):
         # O painel só é acessível se o usuário estiver logado e possuir papel de admin
-        return session.get("user_id") is not None and session.get("user_role") == "admin"
+        return session.get("user_id") is not None and session.get("user_role", "").startswith("admin")
 
     def inaccessible_callback(self, name, **kwargs):
         # Redireciona usuários não autorizados ou deslogados diretamente para a tela de login

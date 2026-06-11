@@ -24,10 +24,52 @@ def dashboard():
 @login_required
 @role_required("admin")
 def list_admins():
-    """Lista a equipe de administradores no painel Tailwind."""
-    # Aqui estava o erro da tabela vazia! Agora estamos buscando os dados corretamente:
-    equipe = service.get_all_admins()
-    return render_template("admin/list_team.html", users=equipe)
+    """Lista a equipe garantindo o admin logado no topo e apenas subordinados abaixo."""
+    admin_id = session.get("user_id")
+    current_admin = service.get_admin(admin_id)
+    
+    if not current_admin or not current_admin.role or not current_admin.role.level:
+        session.clear()
+        flash("Sessão inválida ou sem permissões. Por favor, faça login novamente.", "danger")
+        return redirect(url_for("auth.login"))
+
+    all_admins = service.get_all_admins()
+
+    # Mapeamento de hierarquia estruturado
+    level_weights = {
+        "max": 4,
+        "premium": 3,
+        "basic": 2,
+        "support": 1
+    }
+
+    # Helper seguro para extrair o nome do nível em minúsculo
+    def get_level_name(admin_user):
+        if admin_user.role and admin_user.role.level:
+            lvl = admin_user.role.level
+            return str(lvl.name if hasattr(lvl, 'name') else lvl).strip().lower()
+        return ""
+
+    current_lvl = get_level_name(current_admin)
+    current_weight = level_weights.get(current_lvl, 0)
+
+    # CORREÇÃO: Força o administrador logado a ser o PRIMEIRO elemento do array
+    filtered_admins = [current_admin]
+
+    for u in all_admins:
+        # Pula o próprio usuário logado para ele não aparecer duplicado na lista
+        if u.id == current_admin.id:
+            continue
+            
+        target_lvl = get_level_name(u)
+        target_weight = level_weights.get(target_lvl, 0)
+        
+        # REGRA ESTRITA: Só adiciona se o nível do alvo for estritamente menor (<)
+        # Isso remove outros "Max" da lista da Daphne e outros "Basic" da lista do qa1
+        if target_weight < current_weight:
+            filtered_admins.append(u)
+
+    return render_template("admin/list_team.html", users=filtered_admins)
 
 
 @bp_admin.route("/businesses", methods=["GET"])
@@ -35,7 +77,6 @@ def list_admins():
 @role_required("admin")
 def list_all_businesses():
     """Tela do administrador para visualizar TODOS os restaurantes cadastrados."""
-    # Resolve a falta do gerenciamento de cada business
     todos_restaurantes = b_service.get_all_businesses()
     return render_template("admin/businesses.html", businesses=todos_restaurantes)
 
@@ -45,7 +86,6 @@ def list_all_businesses():
 @role_required("admin")
 def manage_business_types():
     """Tela para criar e listar as Categorias Gastronômicas (Tags)."""
-    # Resolve o Erro 404
     if request.method == "POST":
         name = request.form.get("name")
         description = request.form.get("description")
@@ -82,7 +122,7 @@ def edit_admin(id):
         data = dict(request.form)
         success, msg, code = service.update_admin(id, data)
         if success:
-            flash("Perfil atualizado com sucesso.", "success")
+            flash("Perfil updated com sucesso.", "success")
             return redirect(url_for("admin.list_admins"))
         flash(msg, "danger")
 

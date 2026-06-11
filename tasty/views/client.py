@@ -65,6 +65,7 @@ def list_clients():
 @bp_client.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_client(id):
+    # Proteção: Apenas o próprio cliente ou um admin podem editar
     if session.get("user_role") != "admin" and session.get("user_id") != id:
         flash("Acesso negado.", "danger")
         return redirect(url_for("client.dashboard"))
@@ -77,6 +78,7 @@ def edit_client(id):
     if request.method == "POST":
         data = dict(request.form)
         
+        # --- 1. TRATAMENTO DE SENHA ---
         old_pw = data.pop("old_password", "").strip()
         new_pw = data.pop("new_password", "").strip()
         
@@ -88,6 +90,16 @@ def edit_client(id):
             else:
                 flash("Senha alterada com sucesso.", "success")
 
+        # --- 2. TRATAMENTO DE PREFERÊNCIAS GASTRONÔMICAS ---
+        # Captura os múltiplos IDs enviados pelos checkboxes no formulário
+        prefs = request.form.getlist("preferences")
+        if prefs:
+            data["preferences"] = [int(p) for p in prefs if p.isdigit()]
+        else:
+            # Caso o usuário tenha desmarcado tudo, enviamos uma lista vazia
+            data["preferences"] = []
+
+        # --- 3. TRATAMENTO DE ENDEREÇO E GEOCODIFICAÇÃO ---
         # Verifica se um endereço está sendo enviado
         if data.get("road"):
             # Extrai os dados puros do formulário
@@ -121,7 +133,11 @@ def edit_client(id):
             return redirect(request.url)
         flash(msg, "danger")
 
-    return render_template("client/form.html", user=client_user)
+    # --- RENDERIZAÇÃO DO GET ---
+    # Busca todas as tags para o front-end desenhar os cartões clicáveis
+    tipos_disponiveis = bt_service.get_all_business_types()
+    
+    return render_template("client/form.html", user=client_user, business_types=tipos_disponiveis)
 
 @bp_client.route("/<int:id>/delete", methods=["POST"])
 @login_required

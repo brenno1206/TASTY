@@ -41,7 +41,18 @@
                 
                 <div class="p-5 flex-grow">
                     <h3 class="font-bold text-xl text-gray-800 mb-1">{{ b.trade_name }}</h3>
-                    <p class="text-xs text-gray-500 mb-3">CNPJ: {{ b.cnpj }}</p>
+                    <p class="text-xs text-gray-500 mb-2">CNPJ: {{ b.cnpj }}</p>
+                    
+                    <!-- NOVO: Exibição da Categoria na Listagem -->
+                    {% if b.business_types %}
+                    <span class="inline-block bg-orange-100 text-orange-800 text-xs font-bold px-2.5 py-1 rounded-full mb-3">
+                        {{ b.business_types[0].emoji | safe if b.business_types[0].emoji else '🍽️' }} {{ b.business_types[0].name }}
+                    </span>
+                    {% else %}
+                    <span class="inline-block bg-gray-100 text-gray-500 text-xs font-bold px-2.5 py-1 rounded-full mb-3">
+                        Sem Categoria
+                    </span>
+                    {% endif %}
                     
                     <p class="text-sm text-gray-600 line-clamp-2 mb-4">
                         {{ b.description or "Nenhuma descrição informada." }}
@@ -60,7 +71,7 @@
                     <form action="{{ url_for('business_panel.delete_business', id=b.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja desativar este restaurante do aplicativo?');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-bold">
-                            Desativar
+                            Exluir
                         </button>
                     </form>
                 </div>

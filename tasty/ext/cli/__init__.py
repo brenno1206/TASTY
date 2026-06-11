@@ -7,259 +7,206 @@ from tasty.ext.db import db
 from tasty.models import Level, Role, User, BusinessType, City, Business, Address, Photo
 from tasty.ext.cli.security import ensure_safe_seed_environment
 
-# ==========================================================
-# INIT APP
-# ========================================================== 
-
 def init_app(app):
-
-    # ======================================================
-    # CREATE DB
-    # ======================================================
 
     @app.cli.command("create-db")
     def create_db():
         """Cria todas as tabelas do BD"""
-        import tasty.models  # Garante reconhecimento
-        
-        click.echo(f"Diretório atual: {os.getcwd()}")
-        click.echo(f"Instance path: {current_app.instance_path}")
-        click.echo(f"DB URI: {current_app.config['SQLALCHEMY_DATABASE_URI']}")
+        import tasty.models
         db.create_all()
         click.echo("Banco de dados materializado com sucesso!")
 
-
-    # ======================================================
-    # DROP DB
-    # ======================================================
-
     @app.cli.command("drop-db")
-    @click.confirmation_option(prompt="Tem certeza que deseja apagar TUDO? Esta ação não pode ser desfeita.")
+    @click.confirmation_option(prompt="Tem certeza que deseja apagar TUDO?")
     def drop_db():
         """Remove todas as tabelas do banco."""
         db.drop_all()
         click.echo("Banco de dados removido com sucesso.")
 
-
-    # ======================================================
-    # POPULANDO DADOS EM AMBIENTE DE DESENVOLVIMENTO
-    # ======================================================
-
     @app.cli.command("seed-dev")
     def seed_dev():
-        """Popula o banco com cenário completo (Apenas em Development)."""
-        
-        # Trava de segurança
+        """Popula o banco com cenário massivo estruturado por níveis."""
         ensure_safe_seed_environment()
 
-        is_dev = (
-            app.config.get("ENV") == "development" or
-            app.debug is True or
-            current_app.config.get("FLASK_ENV") == "development"
-        )
+        if not (app.config.get("ENV") == "development" or app.debug is True):
+            raise click.ClickException("OPERAÇÃO BLOQUEADA: Apenas em dev.")
 
-        if not is_dev:
-            raise click.ClickException(
-                "OPERAÇÃO BLOQUEADA: este Comando só pode ser executado em ambiente de desenvolvimento."
-            )
-
-        confirm = click.confirm("Isso irá popular o Banco com Dados de teste (Grande Vitória). Deseja continuar?")
-        if not confirm:
+        if not click.confirm("Deseja popular o banco de dados?"):
             return
         
         try:
             click.echo("Iniciando seed de desenvolvimento...")
             default_pwd = generate_password_hash("123456")
 
-            # ---------------------------------------------------------
             # 1. NÍVEIS
-            # ---------------------------------------------------------
             levels_data = [
-                ("Max", "Acesso total ao Sistema."),
-                ("Premium", "Nível intermediário."),
-                ("Basic", "Nível padrão.")
+                ("Max", "Acesso total (Root)."),
+                ("Premium", "Acesso avançado."),
+                ("Basic", "Acesso padrão."),
+                ("Support", "Acesso restrito.")
             ]
             levels = {}
             for name, desc in levels_data:
-                lv = db.session.execute(select(Level).where(Level.name == name)).scalar_one_or_none()
-                if not lv:
-                    lv = Level(name=name, description=desc)
-                    db.session.add(lv)
+                lv = Level(name=name, description=desc)
+                db.session.add(lv)
                 levels[name] = lv
             db.session.flush()
 
-            # ---------------------------------------------------------
-            # 2. PAPEIS (ROLES)
-            # ---------------------------------------------------------
-            roles_data = {"admin": "Max", "owner": "Premium", "client": "Basic"}
-            roles = {}
-            for role_name, level_key in roles_data.items():
-                r = db.session.execute(select(Role).where(Role.name == role_name)).scalar_one_or_none()
-                if not r:
-                    r = Role(name=role_name, level=levels[level_key])
-                    db.session.add(r)
-                roles[role_name] = r
+            # 2. PAPEIS (ROLES) - Todos com name="admin" usando o modelo flexível!
+            roles_admin = {
+                "Max": Role(name="admin", level=levels["Max"]),
+                "Premium": Role(name="admin", level=levels["Premium"]),
+                "Basic": Role(name="admin", level=levels["Basic"]),
+                "Support": Role(name="admin", level=levels["Support"])
+            }
+            for r in roles_admin.values():
+                db.session.add(r)
+
+            role_owner = Role(name="owner", level=levels["Premium"])
+            role_client = Role(name="client", level=levels["Basic"])
+            db.session.add_all([role_owner, role_client])
             db.session.flush()
 
-            # ---------------------------------------------------------
-            # 3. TIPOS DE NEGÓCIO (Com códigos HTML para Emojis)
-            # ---------------------------------------------------------
+            # 3. TIPOS DE NEGÓCIO
             bt_data = [
-                ("Pizzaria", "Pizzas artesanais e massas", "&#127829;"),
+                ("Pizzaria", "Pizzas artesanais", "&#127829;"),
                 ("Hamburgueria", "Burgers e lanches", "&#127816;"),
                 ("Comida Japonesa", "Sushis e temakis", "&#127843;"),
-                ("Cozinha Brasileira", "Comida caseira e feijoada", "&#127858;"),
+                ("Cozinha Brasileira", "Comida caseira", "&#127858;"),
                 ("Cafeteria", "Cafés e doces", "&#9749;"),
-                ("Vegano", "Opções 100% vegetais", "&#127807;"),
-                ("Churrascaria", "Carnes nobres", "&#127830;")
+                ("Vegano", "Opções vegetais", "&#127807;"),
+                ("Churrascaria", "Carnes nobres", "&#127830;"),
+                ("Comida Mexicana", "Tacos e burritos", "&#127790;"),
+                ("Frutos do Mar", "Moquecas e peixes", "&#129422;"),
+                ("Comida Árabe", "Kibes e esfihas", "&#129366;"),
+                ("Sorveteria", "Sobremesas geladas", "&#127846;"),
+                ("Saudável", "Saladas e bowls", "&#129367;")
             ]
             b_types = {}
             for name, desc, emoji in bt_data:
-                bt = db.session.execute(select(BusinessType).where(BusinessType.name == name)).scalar_one_or_none()
-                if not bt:
-                    bt = BusinessType(name=name, description=desc, emoji=emoji)
-                    db.session.add(bt)
+                bt = BusinessType(name=name, description=desc, emoji=emoji)
+                db.session.add(bt)
                 b_types[name] = bt
             db.session.flush()
 
-            # ---------------------------------------------------------
-            # 4. CIDADES (Grande Vitória - ES)
-            # ---------------------------------------------------------
-            cities_data = ["Vila Velha", "Vitória", "Serra", "Cariacica"]
+            # 4. CIDADES
+            cities_data = ["Vila Velha", "Vitória", "Serra", "Cariacica", "Guarapari"]
             cities = {}
             for c_name in cities_data:
-                city = db.session.execute(select(City).where(City.name == c_name, City.state == "ES")).scalar_one_or_none()
-                if not city:
-                    city = City(name=c_name, state="ES", country="Brasil", region="Sudeste")
-                    db.session.add(city)
+                city = City(name=c_name, state="ES", country="Brasil", region="Sudeste")
+                db.session.add(city)
                 cities[c_name] = city
             db.session.flush()
 
-            # ---------------------------------------------------------
-            # 5. USUÁRIOS
-            # ---------------------------------------------------------
-            # - 2 Administradores
+            # 5. USUÁRIOS: 10 Admins
             admins_info = [
-                ("Brenno Gomes Breda", "brenno@admin.com", "111.111.111-11"),
-                ("Daphne Rocha Amigo", "daphne@admin.com", "222.222.222-22")
+                ("Brenno Gomes Breda", "brenno@admin.com", "111.111.111-01", "Max"),
+                ("Daphne Rocha", "daphne@admin.com", "111.111.111-02", "Max"),
+                ("Prof. Abrantes Araújo", "abrantes@admin.com", "111.111.111-03", "Max"),
+                ("Jean-Remi", "jeanremi@admin.com", "111.111.111-04", "Premium"),
+                ("Admin Suporte 1", "suporte1@admin.com", "111.111.111-05", "Support"),
+                ("Admin Suporte 2", "suporte2@admin.com", "111.111.111-06", "Support"),
+                ("Admin Qualidade 1", "qa1@admin.com", "111.111.111-07", "Basic"),
+                ("Admin Qualidade 2", "qa2@admin.com", "111.111.111-08", "Basic"),
+                ("Gerente Operacional", "gerente@admin.com", "111.111.111-09", "Premium"),
+                ("Auditor Geral", "auditor@admin.com", "111.111.111-10", "Max")
             ]
-            for name, email, cpf in admins_info:
-                u = db.session.execute(select(User).where(User.email == email)).scalar_one_or_none()
-                if not u:
-                    u = User(name=name, email=email, cpf=cpf, password=default_pwd, role=roles["admin"], is_active=True)
-                    db.session.add(u)
+            for name, email, cpf, lvl in admins_info:
+                u = User(name=name, email=email, cpf=cpf, password=default_pwd, role=roles_admin[lvl], is_active=True)
+                db.session.add(u)
 
-            # - 3 Clientes
+            # 6. USUÁRIOS: 10 Clientes
             clients_info = [
-                ("Isabel Emília", "isabel@client.com", "333.333.333-33"),
-                ("Maria Carla", "maria@client.com", "444.444.444-44"),
-                ("Rhuan Santos", "rhuan@client.com", "555.555.555-55")
+                ("Isabel Emília Sterim Saade", "isabel@client.com", "222.222.222-01", "Rua Castelo Branco", 101, "Praia da Costa", "29101-000", -20.3297, -40.2818, "Vila Velha"),
+                ("Maria Carla dos Santos Bellote", "maria@client.com", "222.222.222-02", "Av. Dante Michelini", 202, "Enseada do Suá", "29050-000", -20.3150, -40.2905, "Vitória"),
+                ("Rhuan Santos Wolfgramm", "rhuan@client.com", "222.222.222-03", "Av. Central", 303, "Laranjeiras", "29165-000", -20.1985, -40.2605, "Serra"),
+                ("Lucas Ferreira", "lucas@client.com", "222.222.222-04", "BR-262", 404, "Jardim América", "29140-000", -20.3540, -40.3800, "Cariacica"),
+                ("Camila Neves", "camila@client.com", "222.222.222-05", "Av. Beira Mar", 505, "Centro", "29200-000", -20.6660, -40.4990, "Guarapari"),
+                ("Thiago Barbosa", "thiago@client.com", "222.222.222-06", "Rua Ceará", 606, "Itapuã", "29101-700", -20.3475, -40.2913, "Vila Velha"),
+                ("Beatriz Lima", "beatriz@client.com", "222.222.222-07", "Rua da Lama", 707, "Jardim da Penha", "29060-230", -20.2925, -40.2942, "Vitória"),
+                ("Gustavo Almeida", "gustavo@client.com", "222.222.222-08", "Av. Eudes Scherrer", 808, "Laranjeiras", "29165-130", -20.1900, -40.2600, "Serra"),
+                ("Fernanda Costa", "fernanda@client.com", "222.222.222-09", "Rodovia do Sol", 909, "Coqueiral", "29102-041", -20.3590, -40.3010, "Vila Velha"),
+                ("Ricardo Mendes", "ricardo@client.com", "222.222.222-10", "Av. Rio Branco", 100, "Praia do Canto", "29055-000", -20.3015, -40.2890, "Vitória")
             ]
-            for name, email, cpf in clients_info:
-                u = db.session.execute(select(User).where(User.email == email)).scalar_one_or_none()
-                if not u:
-                    u = User(name=name, email=email, cpf=cpf, password=default_pwd, role=roles["client"], is_active=True)
-                    db.session.add(u)
+            for name, email, cpf, road, num, district, zipc, lat, lng, city_name in clients_info:
+                u = User(name=name, email=email, cpf=cpf, password=default_pwd, role=role_client, is_active=True)
+                u.addresses.append(Address(road=road, number=num, district=district, zipcode=zipc, latitude=lat, longitude=lng, city=cities[city_name]))
+                u.preferences.extend([b_types["Pizzaria"], b_types["Hamburgueria"], b_types["Comida Japonesa"]])
+                db.session.add(u)
 
-            # - 1 Dono de Restaurante (Owner genérico para atrelar os 10 negócios)
-            owner = db.session.execute(select(User).where(User.email == "owner@tasty.com")).scalar_one_or_none()
-            if not owner:
-                owner = User(name="Grupo Gastronômico ES", email="owner@tasty.com", cpf="999.999.999-99", password=default_pwd, role=roles["owner"], is_active=True)
-                db.session.add(owner)
+            # 7. USUÁRIOS: 3 Owners
+            owners_info = [
+                ("Grupo A (2 Restaurantes)", "owner_a@tasty.com", "333.333.333-01"),
+                ("Grupo B (3 Restaurantes)", "owner_b@tasty.com", "333.333.333-02"),
+                ("Grupo C (4 Restaurantes)", "owner_c@tasty.com", "333.333.333-03")
+            ]
+            owner_users = {}
+            for name, email, cpf in owners_info:
+                u = User(name=name, email=email, cpf=cpf, password=default_pwd, role=role_owner, is_active=True)
+                db.session.add(u)
+                owner_users[email] = u
             
             db.session.flush()
 
-            # ---------------------------------------------------------
-            # 6. RESTAURANTES (10 com CEPs Reais da Grande Vitória)
-            # ---------------------------------------------------------
-            businesses_data = [
-                {
-                    "trade": "Bonna Pizza Praia da Costa", "cnpj": "00.000.000/0001-01", "type": "Pizzaria",
-                    "open": "18:00", "close": "23:59", "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591",
-                    "road": "Av. Antônio Gil Veloso", "num": 100, "district": "Praia da Costa", "zip": "29101-010", "city": "Vila Velha", "lat": -20.3297, "lng": -40.2818
-                },
-                {
-                    "trade": "Burger Station Itapuã", "cnpj": "00.000.000/0001-02", "type": "Hamburgueria",
-                    "open": "18:00", "close": "23:00", "img": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-                    "road": "R. Jair de Andrade", "num": 500, "district": "Itapuã", "zip": "29101-700", "city": "Vila Velha", "lat": -20.3475, "lng": -40.2913
-                },
-                {
-                    "trade": "Sushi Vitória Lounge", "cnpj": "00.000.000/0001-03", "type": "Comida Japonesa",
-                    "open": "19:00", "close": "00:00", "img": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c",
-                    "road": "Rua da Lama", "num": 120, "district": "Jardim da Penha", "zip": "29060-230", "city": "Vitória", "lat": -20.2925, "lng": -40.2942
-                },
-                {
-                    "trade": "Cantina Italiana Triângulo", "cnpj": "00.000.000/0001-04", "type": "Pizzaria",
-                    "open": "11:30", "close": "23:00", "img": "https://images.unsplash.com/photo-1551183053-bf91a1d81141",
-                    "road": "Triângulo das Bermudas", "num": 10, "district": "Praia do Canto", "zip": "29055-000", "city": "Vitória", "lat": -20.3015, "lng": -40.2890
-                },
-                {
-                    "trade": "Steakhouse Laranjeiras", "cnpj": "00.000.000/0001-05", "type": "Churrascaria",
-                    "open": "11:00", "close": "16:00", "img": "https://images.unsplash.com/photo-1594046243098-0fceea9d451e",
-                    "road": "Av. Central", "num": 1500, "district": "Parque Residencial Laranjeiras", "zip": "29165-130", "city": "Serra", "lat": -20.1985, "lng": -40.2605
-                },
-                {
-                    "trade": "Lanchonete Campo Grande", "cnpj": "00.000.000/0001-06", "type": "Hamburgueria",
-                    "open": "08:00", "close": "20:00", "img": "https://images.unsplash.com/photo-1626079218683-1b91bc62b712",
-                    "road": "Av. Expedito Garcia", "num": 50, "district": "Campo Grande", "zip": "29146-201", "city": "Cariacica", "lat": -20.3540, "lng": -40.3800
-                },
-                {
-                    "trade": "Moqueca Capixaba Raiz", "cnpj": "00.000.000/0001-07", "type": "Cozinha Brasileira",
-                    "open": "11:00", "close": "17:00", "img": "https://images.unsplash.com/photo-1621852004158-f3bc188ace2d",
-                    "road": "Av. Nossa Sra. dos Navegantes", "num": 800, "district": "Enseada do Suá", "zip": "29050-335", "city": "Vitória", "lat": -20.3150, "lng": -40.2905
-                },
-                {
-                    "trade": "Vegan Life Coqueiral", "cnpj": "00.000.000/0001-08", "type": "Vegano",
-                    "open": "10:00", "close": "22:00", "img": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd",
-                    "road": "Av. Santa Leopoldina", "num": 300, "district": "Coqueiral de Itaparica", "zip": "29102-041", "city": "Vila Velha", "lat": -20.3590, "lng": -40.3010
-                },
-                {
-                    "trade": "Mar Aberto Manguinhos", "cnpj": "00.000.000/0001-09", "type": "Cozinha Brasileira",
-                    "open": "10:00", "close": "18:00", "img": "https://images.unsplash.com/photo-1615486171448-4fdca91e1d04",
-                    "road": "Av. Atapuã", "num": 25, "district": "Manguinhos", "zip": "29173-025", "city": "Serra", "lat": -20.1850, "lng": -40.1890
-                },
-                {
-                    "trade": "Café do Centro", "cnpj": "00.000.000/0001-10", "type": "Cafeteria",
-                    "open": "07:00", "close": "19:00", "img": "https://images.unsplash.com/photo-1554118811-1e0d58224f24",
-                    "road": "Rua Jerônimo Monteiro", "num": 850, "district": "Centro", "zip": "29100-021", "city": "Vila Velha", "lat": -20.3305, "lng": -40.2940
-                }
+            # 8. RESTAURANTES
+            photo_pool = [
+                "https://images.unsplash.com/photo-1513104890138-7c749659a591",
+                "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
+                "https://images.unsplash.com/photo-1579871494447-9811cf80d66c",
+                "https://images.unsplash.com/photo-1551183053-bf91a1d81141",
+                "https://images.unsplash.com/photo-1594046243098-0fceea9d451e"
             ]
 
-            for b_data in businesses_data:
-                b = db.session.execute(select(Business).where(Business.cnpj == b_data["cnpj"])).scalar_one_or_none()
-                if not b:
-                    b = Business(
-                        corporate_name=f"{b_data['trade']} LTDA",
-                        trade_name=b_data['trade'],
-                        cnpj=b_data['cnpj'],
-                        description="Venha conhecer os melhores sabores da Grande Vitória preparados com carinho e tradição.",
-                        opening_time=b_data['open'],
-                        closing_time=b_data['close'],
-                        is_active=True
-                    )
-                    
-                    b.owners.append(owner)
-                    b.business_types.append(b_types[b_data["type"]])
-                    
-                    # Foto
-                    b.photos.append(Photo(url=f"{b_data['img']}?auto=format&fit=crop&w=800&q=80", description="Foto de capa"))
-                    
-                    # Endereço
-                    b.addresses.append(Address(
-                        road=b_data['road'],
-                        number=b_data['num'],
-                        district=b_data['district'],
-                        zipcode=b_data['zip'],
-                        latitude=b_data['lat'],
-                        longitude=b_data['lng'],
-                        city=cities[b_data['city']]
-                    ))
+            businesses_data = [
+                {"owner_email": "owner_a@tasty.com", "trade": "Bonna Pizza", "cnpj": "00.000.000/0001-01", "types": ["Pizzaria"], "open": "18:00", "close": "23:59", "num_photos": 4, "road": "Av. Antônio Gil Veloso", "num": 100, "district": "Praia da Costa", "zip": "29101-010", "city": "Vila Velha", "lat": -20.3297, "lng": -40.2818},
+                {"owner_email": "owner_a@tasty.com", "trade": "Burger Station", "cnpj": "00.000.000/0001-02", "types": ["Hamburgueria"], "open": "18:00", "close": "23:00", "num_photos": 3, "road": "R. Jair de Andrade", "num": 500, "district": "Itapuã", "zip": "29101-700", "city": "Vila Velha", "lat": -20.3475, "lng": -40.2913},
+                {"owner_email": "owner_b@tasty.com", "trade": "Sushi Lounge", "cnpj": "00.000.000/0001-03", "types": ["Comida Japonesa"], "open": "19:00", "close": "00:00", "num_photos": 5, "road": "Rua da Lama", "num": 120, "district": "Jardim da Penha", "zip": "29060-230", "city": "Vitória", "lat": -20.2925, "lng": -40.2942},
+                {"owner_email": "owner_b@tasty.com", "trade": "Vegan Life", "cnpj": "00.000.000/0001-04", "types": ["Vegano"], "open": "11:30", "close": "23:00", "num_photos": 2, "road": "Triângulo", "num": 10, "district": "Praia do Canto", "zip": "29055-000", "city": "Vitória", "lat": -20.3015, "lng": -40.2890},
+                {"owner_email": "owner_b@tasty.com", "trade": "Steakhouse Laranjeiras", "cnpj": "00.000.000/0001-05", "types": ["Churrascaria"], "open": "11:00", "close": "16:00", "num_photos": 4, "road": "Av. Central", "num": 1500, "district": "Laranjeiras", "zip": "29165-130", "city": "Serra", "lat": -20.1985, "lng": -40.2605},
+                {"owner_email": "owner_c@tasty.com", "trade": "Los Tacos", "cnpj": "00.000.000/0001-06", "types": ["Comida Mexicana"], "open": "08:00", "close": "20:00", "num_photos": 5, "road": "Av. Expedito Garcia", "num": 50, "district": "Campo Grande", "zip": "29146-201", "city": "Cariacica", "lat": -20.3540, "lng": -40.3800},
+                {"owner_email": "owner_c@tasty.com", "trade": "Moqueca Raiz", "cnpj": "00.000.000/0001-07", "types": ["Cozinha Brasileira"], "open": "11:00", "close": "17:00", "num_photos": 4, "road": "Navegantes", "num": 800, "district": "Enseada", "zip": "29050-335", "city": "Vitória", "lat": -20.3150, "lng": -40.2905},
+                {"owner_email": "owner_c@tasty.com", "trade": "Habib Arab", "cnpj": "00.000.000/0001-08", "types": ["Comida Árabe"], "open": "10:00", "close": "22:00", "num_photos": 3, "road": "Santa Leopoldina", "num": 300, "district": "Coqueiral", "zip": "29102-041", "city": "Vila Velha", "lat": -20.3590, "lng": -40.3010},
+                {"owner_email": "owner_c@tasty.com", "trade": "Gelato Manguinhos", "cnpj": "00.000.000/0001-09", "types": ["Sorveteria"], "open": "10:00", "close": "18:00", "num_photos": 5, "road": "Atapuã", "num": 25, "district": "Manguinhos", "zip": "29173-025", "city": "Serra", "lat": -20.1850, "lng": -40.1890}
+            ]
 
-                    db.session.add(b)
+            photo_idx = 0
+            for b_data in businesses_data:
+                b = Business(
+                    corporate_name=f"{b_data['trade']} LTDA", trade_name=b_data['trade'], cnpj=b_data['cnpj'],
+                    description="Venha conhecer os melhores sabores da Região Metropolitana.", opening_time=b_data['open'],
+                    closing_time=b_data['close'], is_active=True
+                )
+                b.owners.append(owner_users[b_data["owner_email"]])
+                for t_name in b_data["types"]:
+                    b.business_types.append(b_types[t_name])
+                
+                for _ in range(b_data["num_photos"]):
+                    img_url = photo_pool[photo_idx % len(photo_pool)]
+                    b.photos.append(Photo(url=f"{img_url}?auto=format&fit=crop&w=800&q=80", description="Foto"))
+                    photo_idx += 1
+                
+                b.addresses.append(Address(road=b_data['road'], number=b_data['num'], district=b_data['district'], zipcode=b_data['zip'], latitude=b_data['lat'], longitude=b_data['lng'], city=cities[b_data['city']]))
+                db.session.add(b)
 
             db.session.commit()
-            click.echo("Seed de desenvolvimento concluído com sucesso!")
-            click.echo("Acesse com: brenno@admin.com, isabel@client.com, owner@tasty.com (Senha: 123456)")
+            
+            click.echo("\n" + "="*70)
+            click.echo("✅ SEED DE DESENVOLVIMENTO MASSIVO CONCLUÍDO COM SUCESSO!")
+            click.echo("🔑 Senha Universal Para Todas as Contas: 123456")
+            click.echo("="*70 + "\n")
+            
+            click.echo("--- 🛡️  ADMINISTRADORES (Acessam: /admin/dashboard) ---")
+            for name, email, _, lvl in admins_info:
+                click.echo(f"  [Nível: {lvl.ljust(7)}] {email.ljust(25)} -> {name}")
+                
+            click.echo("\n--- 🍔 CLIENTES (Acessam: /client/dashboard | /discovery/feed) ---")
+            for name, email, _, road, _, dist, _, _, _, _ in clients_info:
+                click.echo(f"  {email.ljust(25)} -> Radar: {road}, {dist}")
+                
+            click.echo("\n--- 🏪 PARCEIROS COMERCIAIS (Acessam: /owner/dashboard | /my-business/list) ---")
+            for name, email, _ in owners_info:
+                click.echo(f"  {email.ljust(25)} -> {name}")
+            click.echo("\n" + "="*70)
             
         except Exception as e:
             db.session.rollback()

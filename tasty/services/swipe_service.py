@@ -4,7 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from tasty.ext.db import db
 from tasty.models import BusinessSwipe, Business, User
-
+from tasty.services.location_service import get_distance_between_user_and_business
 
 def swipe_business(
     user_id: int,
@@ -51,32 +51,62 @@ def swipe_business(
         db.session.rollback()
         return False, f"Erro interno de banco de dados: {str(e)}", 500
 
-
 def get_next_businesses_for_user(user_id: int, limit: int = 20) -> List[Business]:
     """
-    Retorna restaurantes que o usuário ainda NÃO avaliou (swipe).
-    Otimizado para usar LEFT JOIN ao invés de NOT IN (subquery),
-    garantindo performance escalar no PostgreSQL.
+    Retorna estabelecimentos não avaliados ordenados por um score misto:
+    80% Afinidade Gastronômica (Quantidade de tags em comum)
+    20% Proximidade Geográfica (Mais perto do endereço principal do cliente)
     """
     try:
-        stmt = (
-            select(Business)
-            .outerjoin(
-                BusinessSwipe, 
-                (Business.id == BusinessSwipe.business_id) & (BusinessSwipe.user_id == user_id)
-            )
-            .where(
-                Business.is_active == True,
-                BusinessSwipe.id.is_(None)  # Onde não houver match no JOIN, significa que não houve swipe
-            )
-            .limit(limit)
-        )
+        # 1. Puxa os dados de localização e preferências do cliente
+        user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        if not user or not user.addresses or not user.preferences:
+            # Fallback seguro caso onboarding esteja incompleto
+            stmt = select(Business).outerjoin(BusinessSwipe, (Business.id == BusinessSwipe.business_id) & (BusinessSwipe.user_id == user_id)).where(Business.is_active == True, BusinessSwipe.id.is_(None)).limit(limit)
+            return list(db.session.execute(stmt).scalars().all())
 
-        return list(db.session.execute(stmt).scalars().all())
+        user_addr = user.addresses[0]
+        user_lat, user_lon = user_addr.latitude, user_addr.longitude
+        user_pref_ids = [p.id for p in user.preferences]
+
+        # 2. Busca todos os candidatos válidos (Restaurantes Ativos e sem Swipe)
+        stmt_candidates = (
+            select(Business)
+            .outerjoin(BusinessSwipe, (Business.id == BusinessSwipe.business_id) & (BusinessSwipe.user_id == user_id))
+            .where(Business.is_active == True, BusinessSwipe.id.is_(None))
+        )
+        candidates = db.session.execute(stmt_candidates).scalars().all()
+
+        scored_candidates = []
+        for b in candidates:
+            # Cálculo de Afinidade (Tags correspondentes)
+            b_type_ids = [t.id for t in b.business_types]
+            matches = set(user_pref_ids).intersection(set(b_type_ids))
+            
+            # Normalização do score de tags (0.0 a 1.0)
+            tag_score = len(matches) / len(user_pref_ids) if user_pref_ids else 0
+
+            # Cálculo de Distância Real (Haversine)
+            dist = get_distance_between_user_and_business(user_id, b.id)
+            if dist is None:
+                dist = 50.0 # Penalidade padrão (50km) se estiver sem coordenadas
+            
+            # Normalização do score de distância (Inverso: mais perto = score maior)
+            # Definimos uma janela de corte de 30km para o cálculo do peso
+            distance_score = max(0, (30.0 - dist) / 30.0)
+
+            # Cálculo do Score Composto Final
+            final_score = (0.8 * tag_score) + (0.2 * distance_score)
+            
+            b.distance_km = round(dist, 1) if dist is not None else "--"
+            scored_candidates.append((final_score, b))
+
+        # 3. Ordena decrescentemente pelo score composto e aplica o limite
+        scored_candidates.sort(key=lambda x: x[0], reverse=True)
+        return [item[1] for item in scored_candidates[:limit]]
 
     except SQLAlchemyError:
         return []
-
 
 def get_liked_businesses(user_id: int) -> List[Business]:
     """Retorna os estabelecimentos que o usuário avaliou positivamente."""

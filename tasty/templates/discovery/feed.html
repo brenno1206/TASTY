@@ -54,6 +54,39 @@
 
 {% block scripts %}
 <script>
+    // Função global isolada do escopo de arrasto para o controle das subfotos
+    function changeCardPhoto(element, direction) {
+        // Encontra o card pai mais próximo da div clicada
+        const card = element.closest('.swipe-card');
+        const photos = card.querySelectorAll('.carousel-photo');
+        const indicators = card.querySelectorAll('.photo-indicator');
+        
+        if (!photos.length) return;
+
+        // Identifica qual é a imagem visível no momento
+        let activeIndex = 0;
+        photos.forEach((img, idx) => {
+            if (!img.classList.contains('opacity-0')) {
+                activeIndex = idx;
+            }
+        });
+
+        // Calcula o próximo índice com tratamento de limite circular circular
+        let nextIndex = activeIndex + direction;
+        if (nextIndex < 0) nextIndex = 0;
+        if (nextIndex >= photos.length) nextIndex = photos.length - 1;
+
+        // Se mudou de foto, atualiza classes de opacidade e os tracinhos superiores
+        if (nextIndex !== activeIndex) {
+            photos[activeIndex].classList.add('opacity-0', 'pointer-events-none');
+            indicators[activeIndex].classList.remove('bg-opacity-100', 'shadow-sm');
+            indicators[activeIndex].classList.add('bg-opacity-40');
+
+            photos[nextIndex].classList.remove('opacity-0', 'pointer-events-none');
+            indicators[nextIndex].classList.remove('bg-opacity-40');
+            indicators[nextIndex].classList.add('bg-opacity-100', 'shadow-sm');
+        }
+    }
     document.addEventListener("DOMContentLoaded", () => {
         const deck = document.getElementById("card-deck");
         const cards = document.querySelectorAll(".swipe-card");

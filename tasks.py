@@ -58,7 +58,7 @@ def run(c):
     """
     Executa a aplicacao Flask em ambiente de desenvolvimento.
     """
-    load_env("dev");
+    load_env("dev")
 
     env = os.environ.copy()
 
@@ -106,15 +106,29 @@ def format(c):
     """
     c.run("black .")
 
-@task
-def create_db_dev(c):
-    load_env("dev")
 
-    c.run(
-        "flask create-db",
-        env=os.environ.copy(),
-        pty=False
-    )
+# ==========================================================
+# BANCO DE DADOS (DEV)
+# ==========================================================
+
+@task
+def drop_db(c):
+    """
+    Apaga todas as tabelas do banco de dados.
+    """
+    load_env("dev")
+    # pty=True é OBRIGATÓRIO aqui para o terminal deixar você digitar "y" na confirmação
+    c.run("flask drop-db", env=os.environ.copy(), pty=True)
+
+
+@task
+def create_db(c):
+    """
+    Cria as tabelas do banco de dados do zero.
+    """
+    load_env("dev")
+    c.run("flask create-db", env=os.environ.copy(), pty=True)
+
 
 @task
 def seed_dev(c):
@@ -122,7 +136,8 @@ def seed_dev(c):
     Executa o comando de seed garantindo o ambiente de desenvolvimento.
     """
     load_env("dev")
-    os.system("flask seed-dev")
+    # Trocado os.system pelo c.run do Invoke, mantendo o pty=True para interações
+    c.run("flask seed-dev", env=os.environ.copy(), pty=True)
 
 
 # ==========================================================
@@ -134,7 +149,7 @@ def clean(c):
     """
     Exclui arquivos e pastas indesejadas a partir do diretório atual.
     """
-    excludes = ["venv", "__pycache__", ".git", ".vscode", "tasty.egg-info"]
+    excludes = ["venv", "__pycache__", ".git", ".vscode", "tasty.egg-info", "instance"]
 
     print("→ Iniciando a exclusão dos arquivos e pastas...")
 

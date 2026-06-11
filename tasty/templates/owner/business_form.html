@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <form action="{{ url_for('business_panel.edit_business', id=business.id) if business else url_for('business_panel.register_business') }}" method="POST" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 space-y-8">
+        <form id="business-form" action="{{ url_for('business_panel.edit_business', id=business.id) if business else url_for('business_panel.register_business') }}" method="POST" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 space-y-8">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
             <div>
@@ -36,12 +36,36 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    <div>
+                <div class="grid grid-cols-1 gap-6 mt-6">
+                    <div class="md:w-1/2 md:pr-3">
                         <label class="block text-sm font-bold text-gray-700 mb-1">CNPJ <span class="text-red-500">*</span></label>
                         <input type="text" name="cnpj" value="{{ business.cnpj if business else '' }}" 
                                {% if business %}readonly class="bg-gray-100 text-gray-500 w-full px-4 py-2.5 rounded border border-gray-300 outline-none cursor-not-allowed" title="CNPJ não pode ser alterado" 
                                {% else %}required class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none"{% endif %} placeholder="00.000.000/0001-00">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Categorias (Tipos de Cozinha) <span class="text-red-500">*</span></label>
+                        <p class="text-xs text-gray-500 mb-3">Selecione uma ou mais opções que descrevem seu cardápio.</p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {% set selected_ids = business.business_types | map(attribute='id') | list if business and business.business_types else [] %}
+                            
+                            {% if business_types %}
+                                {% for t in business_types %}
+                                <label class="cursor-pointer">
+                                    <input type="checkbox" name="business_types" value="{{ t.id }}" class="peer sr-only" {% if t.id in selected_ids %}checked{% endif %}>
+                                    <div class="p-3 border-2 rounded-lg text-center font-bold peer-checked:border-primary peer-checked:bg-orange-50 hover:bg-gray-50 transition-all text-sm">
+                                        {{ t.emoji | safe if t.emoji else '🍽️' }} {{ t.name }}
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            {% else %}
+                                <div class="col-span-full p-4 bg-yellow-50 text-yellow-700 text-sm font-bold rounded border border-yellow-200">
+                                    Nenhuma categoria cadastrada no sistema. Contate um administrador.
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -64,10 +88,21 @@
                     </div>
                 </div>
 
-                <div class="mt-6">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">URL da Foto de Capa</label>
-                    <input type="url" name="photos_urls" value="{{ business.photos[0].url if business and business.photos else '' }}" placeholder="https://exemplo.com/foto.jpg" class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
-                    <p class="text-xs text-gray-400 mt-1">Insira um link direto para a imagem do seu prato principal.</p>
+                <div class="mt-8">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Fotos do Estabelecimento / Pratos</label>
+                    <p class="text-xs text-gray-500 mb-4">A primeira URL é obrigatória e será a capa. Você pode incluir até 4 fotos adicionais (opcionais).</p>
+                    
+                    <div class="space-y-3">
+                        {% for i in range(5) %}
+                            {% set photo_val = business.photos[i].url if business and business.photos and business.photos|length > i else '' %}
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-bold text-gray-400 w-4">{{ i + 1 }}.</span>
+                                <input type="url" name="photos_urls" value="{{ photo_val }}" 
+                                       placeholder="https://exemplo.com/sua-foto-{{ i + 1 }}.jpg" 
+                                       class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none bg-white"
+                                       {% if i == 0 %}required{% endif %}> </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
@@ -96,8 +131,6 @@
                         <input type="text" name="zipcode" value="{{ addr.zipcode if addr else '' }}" class="w-full px-4 py-2.5 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
                     </div>
                 </div>
-
-                
             </div>
 
             <div class="flex justify-end gap-4 pt-4">
@@ -112,6 +145,33 @@
 
     </div>
 </main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('business-form').addEventListener('submit', function(e) {
+        // 1. Validação de Categorias
+        const checkedBoxes = document.querySelectorAll('input[name="business_types"]:checked');
+        
+        if (checkedBoxes.length === 0) {
+            e.preventDefault();
+            alert('Atenção: Você precisa selecionar pelo menos 1 Categoria (Tipo de Cozinha) para o seu restaurante aparecer no feed!');
+            document.querySelector('input[name="business_types"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return; // Sai da função caso caia no erro de validação
+        }
+
+        // 2. Limpeza de URLs vazias antes do envio (Otimização para o Back-end)
+        const photoInputs = document.querySelectorAll('input[name="photos_urls"]');
+        photoInputs.forEach(input => {
+            // Se o campo for opcional e o usuário não digitou nada, desativamos o input.
+            // Inputs desativados (disabled) não são enviados na requisição POST do HTML, 
+            // economizando processamento inútil no Python/Banco de Dados.
+            if (input.value.trim() === '') {
+                input.disabled = true;
+            }
+        });
+    });
+</script>
 {% endblock %}
 
 {% block footer %}
