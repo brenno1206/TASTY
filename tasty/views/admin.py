@@ -1,7 +1,6 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, current_app
 from tasty.utils.decorators import login_required, role_required
 
-# Importação de todos os serviços necessários
 import tasty.services.user_service as service
 import tasty.services.analytics_service as analytics_service
 import tasty.services.business_service as b_service
@@ -17,6 +16,7 @@ bp_admin = Blueprint("admin", __name__, url_prefix="/admin")
 def dashboard():
     """Painel principal com as métricas globais."""
     stats = analytics_service.get_global_metrics()
+    current_app.logger.info(f"Admin Dashboard acessado por usuário ID {session.get('user_id')}. Métricas carregadas: {stats}")
     return render_template("admin/dashboard.html", stats=stats)
 
 
@@ -31,11 +31,11 @@ def list_admins():
     if not current_admin or not current_admin.role or not current_admin.role.level:
         session.clear()
         flash("Sessão inválida ou sem permissões. Por favor, faça login novamente.", "danger")
+        current_app.logger.warning(f"Admin ID {admin_id} com sessão inválida ou sem role/level. Forçando logout.")
         return redirect(url_for("auth.login"))
 
     all_admins = service.get_all_admins()
 
-    # Mapeamento de hierarquia estruturado
     level_weights = {
         "max": 4,
         "premium": 3,
@@ -43,7 +43,6 @@ def list_admins():
         "support": 1
     }
 
-    # Helper seguro para extrair o nome do nível em minúsculo
     def get_level_name(admin_user):
         if admin_user.role and admin_user.role.level:
             lvl = admin_user.role.level
@@ -53,22 +52,18 @@ def list_admins():
     current_lvl = get_level_name(current_admin)
     current_weight = level_weights.get(current_lvl, 0)
 
-    # CORREÇÃO: Força o administrador logado a ser o PRIMEIRO elemento do array
     filtered_admins = [current_admin]
 
     for u in all_admins:
-        # Pula o próprio usuário logado para ele não aparecer duplicado na lista
         if u.id == current_admin.id:
             continue
             
         target_lvl = get_level_name(u)
         target_weight = level_weights.get(target_lvl, 0)
         
-        # REGRA ESTRITA: Só adiciona se o nível do alvo for estritamente menor (<)
-        # Isso remove outros "Max" da lista da Daphne e outros "Basic" da lista do qa1
         if target_weight < current_weight:
             filtered_admins.append(u)
-
+    current_app.logger.info(f"Admin ID {admin_id} listou a equipe. Total admins: {len(all_admins)}, Exibidos: {len(filtered_admins)}.")
     return render_template("admin/list_team.html", users=filtered_admins)
 
 
@@ -78,6 +73,7 @@ def list_admins():
 def list_all_businesses():
     """Tela do administrador para visualizar TODOS os restaurantes cadastrados."""
     todos_restaurantes = b_service.get_all_businesses()
+    current_app.logger.info(f"Admin ID {session.get('user_id')} listou todos os restaurantes. Total: {len(todos_restaurantes)}.")
     return render_template("admin/businesses.html", businesses=todos_restaurantes)
 
 
@@ -99,12 +95,15 @@ def manage_business_types():
                 db.session.add(nova_cat)
                 db.session.commit()
                 flash(f"Categoria '{name}' criada com sucesso!", "success")
+                current_app.logger.info(f"Admin ID {session.get('user_id')} criou nova categoria gastronômica: {name}.")
                 return redirect(url_for("admin.manage_business_types"))
             except Exception as e:
                 db.session.rollback()
+                current_app.logger.error(f"Erro ao criar categoria gastronômica: {str(e)}")
                 flash(f"Erro ao salvar categoria: {str(e)}", "danger")
 
     categorias = bt_service.get_all_business_types()
+    current_app.logger.info(f"Admin ID {session.get('user_id')} acessou a gestão de categorias gastronômicas. Total categorias: {len(categorias)}.")
     return render_template("admin/business_types.html", types=categorias)
 
 
@@ -116,16 +115,20 @@ def edit_admin(id):
     admin_user = service.get_admin(id)
     if not admin_user:
         flash("Administrador não encontrado.", "warning")
+        current_app.logger.warning(f"Admin ID {session.get('user_id')} tentou editar admin ID {id}, mas não foi encontrado.")
         return redirect(url_for("admin.list_admins"))
 
     if request.method == "POST":
         data = dict(request.form)
         success, msg, code = service.update_admin(id, data)
         if success:
-            flash("Perfil updated com sucesso.", "success")
+            current_app.logger.info(f"Administrador atualizado com sucesso (ID: {id}).")
+            flash("Perfil atualizado com sucesso.", "success")
+            current_app.logger.info(f"Admin ID {session.get('user_id')} editou admin ID {id}. Dados atualizados: {data}")
             return redirect(url_for("admin.list_admins"))
         flash(msg, "danger")
 
+    current_app.logger.info(f"Admin ID {session.get('user_id')} acessou a edição do admin ID {id}.")
     return render_template("admin/form.html", user=admin_user)
 
 
@@ -136,4 +139,5 @@ def delete_admin(id):
     """Desativa um administrador."""
     success, msg, code = service.delete_admin(id)
     flash(msg, "success" if success else "danger")
+    current_app.logger.info(f"Admin ID {session.get('user_id')} tentou desativar admin ID {id}. Sucesso: {success}. Mensagem: {msg}")
     return redirect(url_for("admin.list_admins"))

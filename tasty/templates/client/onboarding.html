@@ -52,16 +52,14 @@
                 <p class="text-sm text-gray-500 mb-4">Atualize as categorias de comida para o algoritmo refinar o seu feed diário.</p>
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <!-- Extrai os IDs das preferências que o usuário já tinha marcado -->
                     {% set selected_prefs = user.preferences | map(attribute='id') | list if user and user.preferences else [] %}
                     
                     {% if business_types %}
                         {% for t in business_types %}
                         <label class="cursor-pointer">
-                            <!-- Marca como checked se o ID da categoria estiver na lista do usuário -->
                             <input type="checkbox" name="preferences" value="{{ t.id }}" class="peer sr-only" {% if t.id in selected_prefs %}checked{% endif %}>
                             <div class="p-3 border-2 rounded-lg text-center font-bold peer-checked:border-primary peer-checked:bg-orange-50 hover:bg-gray-50 transition-all text-sm">
-                                {{ t.emoji | safe if t.emoji else '🍽️' }} {{ t.name }}
+                                {{ t.emoji | safe if t.emoji else '&#127860;' }} {{ t.name }}
                             </div>
                         </label>
                         {% endfor %}
@@ -73,7 +71,6 @@
                 </div>
             </div>
 
-            <!-- LOCALIZAÇÃO -->
             {% set addr = user.addresses[0] if user.addresses else None %}
             <div>
                 <h2 class="text-lg font-bold border-b border-gray-200 pb-2 mb-4 text-primary">Sua Localização (Radar)</h2>
@@ -98,8 +95,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- SEGURANÇA (Troca de Senha) -->
             <div>
                 <h2 class="text-lg font-bold border-b border-gray-200 pb-2 mb-4 text-primary">Segurança</h2>
                 <p class="text-sm text-gray-500 mb-4">Preencha apenas se desejar trocar sua senha atual.</p>
@@ -127,7 +122,6 @@
 
 {% block scripts %}
 <script>
-    // Validação para garantir que o cliente escolha pelo menos 1 gosto gastronômico
     document.getElementById('client-form').addEventListener('submit', function(e) {
         const checkedBoxes = document.querySelectorAll('input[name="preferences"]:checked');
         

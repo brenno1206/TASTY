@@ -4,10 +4,6 @@ from sqlalchemy import select
 from tasty.models import Business, Address, Photo, User, BusinessType
 from tasty.ext.db import db
 
-# ==========================================================
-# GERENCIAMENTO DE NEGÓCIO (BUSINESS)
-# ==========================================================
-
 def create_business(data: Dict[str, Any]) -> Tuple[bool, str, int]:
     """Cria um novo estabelecimento com seus relacionamentos de forma segura."""
     if not data or not isinstance(data, dict):
@@ -16,7 +12,6 @@ def create_business(data: Dict[str, Any]) -> Tuple[bool, str, int]:
     payload = data.copy()
         
     try:
-        # Validação de unicidade do CNPJ (Regra de Negócio Crítica)
         cnpj = payload.get("cnpj")
         if not cnpj:
             return False, "Erro: CNPJ é obrigatório.", 400
@@ -24,13 +19,11 @@ def create_business(data: Dict[str, Any]) -> Tuple[bool, str, int]:
         if db.session.execute(select(Business).where(Business.cnpj == cnpj)).scalar_one_or_none():
             return False, "Erro: CNPJ já registrado no sistema.", 400
 
-        # Extração de relacionamentos aninhados para não quebrar a instanciação
         addresses_data = payload.pop("addresses", [])
         photos_urls = payload.pop("photos", []) 
         owners_ids = payload.pop("owners", []) 
         types_ids = payload.pop("business_types", []) 
         
-        # Instanciação estrita da entidade principal
         new_business = Business(
             corporate_name=payload.get("corporate_name"),
             trade_name=payload.get("trade_name"),
@@ -39,8 +32,8 @@ def create_business(data: Dict[str, Any]) -> Tuple[bool, str, int]:
             opening_time=payload.get("opening_time"),
             closing_time=payload.get("closing_time")
         )
+        db.session.add(new_business)
         
-        # Associação de Endereços com suporte à geolocalização
         for addr in addresses_data:
             new_business.addresses.append(
                 Address(
@@ -54,7 +47,6 @@ def create_business(data: Dict[str, Any]) -> Tuple[bool, str, int]:
                 )
             )
             
-        # Associação de Fotos (Aceita lista de strings/urls ou dicionários mapeados)
         for photo in photos_urls:
             if isinstance(photo, dict):
                 new_business.photos.append(
@@ -66,14 +58,12 @@ def create_business(data: Dict[str, Any]) -> Tuple[bool, str, int]:
             else:
                 new_business.photos.append(Photo(url=photo))
                 
-        # Resolução e Associação de N:N (Donos/Owners)
         if owners_ids:
             owners = db.session.execute(
                 select(User).where(User.id.in_(owners_ids), User.is_active == True)
             ).scalars().all()
             new_business.owners.extend(owners)
             
-        # Resolução e Associação de N:N (Tipos de Estabelecimento)
         if types_ids:
             b_types = db.session.execute(
                 select(BusinessType).where(BusinessType.id.in_(types_ids))
@@ -105,9 +95,6 @@ def update_business(business_id: int, data: Dict[str, Any]) -> Tuple[bool, str, 
         return False, "Estabelecimento não encontrado ou inativo.", 404
         
     try:
-        # Lista branca de campos permitidos para atualização genérica
-        # CNPJ não deve ser alterável livremente, mas caso seja requisito no futuro, 
-        # será necessária uma validação de unicidade extra aqui.
         allowed_fields = {
             "corporate_name", "trade_name", "description", 
             "opening_time", "closing_time"
@@ -117,7 +104,6 @@ def update_business(business_id: int, data: Dict[str, Any]) -> Tuple[bool, str, 
             if key in data:
                 setattr(business, key, data[key])
                 
-        # Atualização de Endereços (limpa os antigos e injeta os novos, acionando delete-orphan)
         if "addresses" in data:
             business.addresses.clear()
             for addr in data["addresses"]:
@@ -133,7 +119,6 @@ def update_business(business_id: int, data: Dict[str, Any]) -> Tuple[bool, str, 
                     )
                 )
                 
-        # Atualização de Fotos
         if "photos" in data:
             business.photos.clear()
             for photo in data["photos"]:
@@ -147,7 +132,6 @@ def update_business(business_id: int, data: Dict[str, Any]) -> Tuple[bool, str, 
                 else:
                     business.photos.append(Photo(url=photo))
                 
-        # Atualização de Donos (Owners)
         if "owners" in data:
             business.owners.clear()
             if data["owners"]:
@@ -156,7 +140,6 @@ def update_business(business_id: int, data: Dict[str, Any]) -> Tuple[bool, str, 
                 ).scalars().all()
                 business.owners.extend(owners)
             
-        # Atualização de Categorias (Business Types)
         if "business_types" in data:
             business.business_types.clear()
             if data["business_types"]:

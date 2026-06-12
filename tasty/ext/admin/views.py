@@ -6,16 +6,13 @@ class SecureModelView(ModelView):
     Classe base de segurança. Sobrescreve o comportamento padrão do Flask-Admin
     para garantir proteção estrita de dados baseada na sessão da plataforma Tasty.
     """
-    # Ativa recursos corporativos globais do Flask-Admin
     can_export = True
     page_size = 20
 
     def is_accessible(self):
-        # O painel só é acessível se o usuário estiver logado e possuir papel de admin
         return session.get("user_id") is not None and session.get("user_role", "").startswith("admin")
 
     def inaccessible_callback(self, name, **kwargs):
-        # Redireciona usuários não autorizados ou deslogados diretamente para a tela de login
         flash("Acesso restrito! Por favor, faça login como administrador.", "danger")
         return redirect(url_for("auth.login"))
 
@@ -39,7 +36,6 @@ class UserAdminView(SecureModelView):
         "password": "Senha (Hash)"
     }
     
-    # Proteção de segurança: impede a exibição ou edição acidental do hash da senha
     form_excluded_columns = ["password"]
 
 

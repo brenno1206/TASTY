@@ -8,7 +8,7 @@ def ensure_safe_seed_environment():
     em um ambiente de desenvolvimento isolado.
     """
     
-    app_env = current_app.config.get("APP_ENV", "production") # Assume produção por padrão, é mais seguro
+    app_env = current_app.config.get("APP_ENV", "production")
 
     if app_env != "development":
         raise click.ClickException(
@@ -33,7 +33,6 @@ def ensure_safe_seed_environment():
 
     url = make_url(uri)
 
-    # O formato da string do sqlite/// varia um pouco. Pegamos a database e garantimos que é uma string.
     db_name = str(url.database) if url.database else ""
 
     if not db_name.endswith("tasty_dev.db"):

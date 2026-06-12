@@ -6,6 +6,8 @@ from datetime import timedelta
 load_dotenv(".env.dev", override=True)
 
 def init_app(app):
+    """Configurações centrais do aplicativo, incluindo segurança, banco de dados e e-mail."""
+    app.logger.info("Iniciando configuração central do aplicativo...")
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER')
@@ -18,15 +20,19 @@ def init_app(app):
     # ======================================================
     # CONFIGURAÇÕES DE AMBIENTE E SEGURANÇA
     # ======================================================
+    app.logger.info("Configurando ambiente e segurança...")
     app.config['APP_ENV'] = os.environ.get('APP_ENV', 'production')
     
-    # Converte valores como '1', 'true', 'yes' para o booleano True e o resto para False
     allow_seed_str = str(os.environ.get('ALLOW_SEED', '0')).lower()
     app.config['ALLOW_SEED'] = allow_seed_str in ['1', 'true', 'yes']
 
     # ======================================================
     # MODO 1: DATABASE URL EXPLÍCITO (PROD / TEST / REMOTO)
     # ======================================================
+    if app.config['APP_ENV'] in ['production', 'testing']:
+        app.logger.info("Modo de produção/teste detectado. Usando SQLALCHEMY_DATABASE_URI do ambiente.")
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+    
     database_name = os.environ.get("DATABASE_NAME", "tasty_dev.db")
 
     instance_dir = Path(app.instance_path)
@@ -34,11 +40,10 @@ def init_app(app):
 
     db_path = instance_dir / database_name
 
-    # 🔥 IMPORTANTE: formato Windows-safe absoluto
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path.as_posix()
 
-    # As configurações abaixo agora serão executadas em ambos os modos
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    
     
     if app.debug:
         app.config['DEBUG_TB_TEMPLATE_EDITOR_ENABLED'] = True
@@ -58,9 +63,9 @@ def init_app(app):
     # ---------------------------------------------------------
     # SEGURANÇA E SESSÃO
     # ---------------------------------------------------------
-    # Define o tempo de vida da sessão (ex: 2 horas)
+    app.logger.info("Configurando segurança e sessão...")
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
     
-    # Proteções adicionais contra interceptação de cookies
     app.config['SESSION_COOKIE_HTTPONLY'] = True 
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.logger.info("Configurações centrais do aplicativo concluídas com sucesso.")

@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from .business import Business
 
 class BusinessSwipe(db.Model):
+    """Modelo de Swipe, representando a interação do usuário com um estabelecimento parceiro, incluindo se gostou ou não (like) e se foi um super like."""
     __tablename__ = "business_swipes"
     
     __table_args__ = (
@@ -33,7 +34,6 @@ class BusinessSwipe(db.Model):
         nullable=False
     )
 
-    # Relacionamentos estritos e bidirecionais mapeados
     user: Mapped["User"] = relationship("User", back_populates="swipes")
     business: Mapped["Business"] = relationship("Business", back_populates="swipes")
 

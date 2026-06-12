@@ -11,10 +11,8 @@
     
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- O Container Base foi aumentado de max-w-sm para max-w-md e ficou mais alto -->
     <div class="w-full max-w-md h-[700px] relative flex flex-col items-center px-4">
         
-        <!-- O baralho cresceu de 500px para 600px -->
         <div id="card-deck" class="relative w-full h-[600px] max-w-[400px]">
             {% if businesses %}
                 {% for business in businesses %}
@@ -22,7 +20,7 @@
                 {% endfor %}
             {% else %}
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl shadow-md border border-gray-200">
-                    <span class="text-6xl mb-4">😢</span>
+                    <span class="text-6xl mb-4">&#128546;</span>
                     <h3 class="text-2xl font-bold text-gray-800 mb-2">Acabaram os restaurantes!</h3>
                     <p class="text-gray-500 mb-6">Você já viu todas as opções disponíveis no raio de alcance.</p>
                     <form action="{{ url_for('discovery.reset_history') }}" method="POST">
@@ -38,13 +36,13 @@
         {% if businesses %}
         <div class="flex justify-center items-center gap-6 mt-6">
             <button id="btn-nope" class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 text-red-500 text-3xl hover:bg-red-50 hover:scale-110 transition-all focus:outline-none">
-                ✖
+                &#10060;
             </button>
             <button id="btn-super" class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 text-blue-500 text-2xl hover:bg-blue-50 hover:scale-110 transition-all focus:outline-none">
-                ⭐
+                &#9733;
             </button>
             <button id="btn-like" class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 text-green-500 text-3xl hover:bg-green-50 hover:scale-110 transition-all focus:outline-none">
-                ♥
+                &#10084;
             </button>
         </div>
         {% endif %}
@@ -54,16 +52,13 @@
 
 {% block scripts %}
 <script>
-    // Função global isolada do escopo de arrasto para o controle das subfotos
     function changeCardPhoto(element, direction) {
-        // Encontra o card pai mais próximo da div clicada
         const card = element.closest('.swipe-card');
         const photos = card.querySelectorAll('.carousel-photo');
         const indicators = card.querySelectorAll('.photo-indicator');
         
         if (!photos.length) return;
 
-        // Identifica qual é a imagem visível no momento
         let activeIndex = 0;
         photos.forEach((img, idx) => {
             if (!img.classList.contains('opacity-0')) {
@@ -71,12 +66,10 @@
             }
         });
 
-        // Calcula o próximo índice com tratamento de limite circular circular
         let nextIndex = activeIndex + direction;
         if (nextIndex < 0) nextIndex = 0;
         if (nextIndex >= photos.length) nextIndex = photos.length - 1;
 
-        // Se mudou de foto, atualiza classes de opacidade e os tracinhos superiores
         if (nextIndex !== activeIndex) {
             photos[activeIndex].classList.add('opacity-0', 'pointer-events-none');
             indicators[activeIndex].classList.remove('bg-opacity-100', 'shadow-sm');

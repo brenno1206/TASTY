@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .business_swipe import BusinessSwipe
 
 class Business(db.Model):
+    """Modelo de Estabelecimento Parceiro, representando os negócios que os usuários podem interagir (dar like, super like, etc.) e que possuem proprietários (users) e tipos (business types)."""
     __tablename__ = "businesses"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -21,12 +22,9 @@ class Business(db.Model):
     description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    
-    # Horários salvos como String padronizada (HH:MM) ou Time se necessário em revisões futuras
     opening_time: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
     closing_time: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
 
-    # Relacionamentos
     addresses: Mapped[List["Address"]] = relationship(
         "Address", back_populates="business", cascade="all, delete-orphan"
     )

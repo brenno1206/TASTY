@@ -56,7 +56,7 @@
                                 <label class="cursor-pointer">
                                     <input type="checkbox" name="business_types" value="{{ t.id }}" class="peer sr-only" {% if t.id in selected_ids %}checked{% endif %}>
                                     <div class="p-3 border-2 rounded-lg text-center font-bold peer-checked:border-primary peer-checked:bg-orange-50 hover:bg-gray-50 transition-all text-sm">
-                                        {{ t.emoji | safe if t.emoji else '🍽️' }} {{ t.name }}
+                                        {{ t.emoji | safe if t.emoji else '&#127860;' }} {{ t.name }}
                                     </div>
                                 </label>
                                 {% endfor %}
@@ -150,22 +150,17 @@
 {% block scripts %}
 <script>
     document.getElementById('business-form').addEventListener('submit', function(e) {
-        // 1. Validação de Categorias
         const checkedBoxes = document.querySelectorAll('input[name="business_types"]:checked');
         
         if (checkedBoxes.length === 0) {
             e.preventDefault();
             alert('Atenção: Você precisa selecionar pelo menos 1 Categoria (Tipo de Cozinha) para o seu restaurante aparecer no feed!');
             document.querySelector('input[name="business_types"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return; // Sai da função caso caia no erro de validação
+            return; 
         }
 
-        // 2. Limpeza de URLs vazias antes do envio (Otimização para o Back-end)
         const photoInputs = document.querySelectorAll('input[name="photos_urls"]');
         photoInputs.forEach(input => {
-            // Se o campo for opcional e o usuário não digitou nada, desativamos o input.
-            // Inputs desativados (disabled) não são enviados na requisição POST do HTML, 
-            // economizando processamento inútil no Python/Banco de Dados.
             if (input.value.trim() === '') {
                 input.disabled = true;
             }

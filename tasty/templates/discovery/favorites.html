@@ -24,7 +24,7 @@
                     {% if b.photos %}
                         <img src="{{ b.photos[0].url }}" alt="{{ b.trade_name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                     {% else %}
-                        <div class="w-full h-full flex items-center justify-center text-gray-400 text-3xl">🍽️</div>
+                        <div class="w-full h-full flex items-center justify-center text-gray-400 text-3xl">&#127860;</div>
                     {% endif %}
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                     <h3 class="absolute bottom-3 left-4 font-bold text-white text-lg">{{ b.trade_name }}</h3>
@@ -33,7 +33,7 @@
                     <p class="text-sm text-gray-500 line-clamp-2 mb-3 flex-grow">{{ b.description or "Nenhuma descrição informada." }}</p>
                     
                     <p class="text-xs font-bold text-primary mb-4 bg-orange-50 inline-block px-3 py-1.5 rounded-full">
-                        📍 A {{ b.distance_km }} km de distância
+                        &#128204; A {{ b.distance_km }} km de distância
                     </p>
                     
                     <!-- Agora o link leva para a rota pública do restaurante -->
@@ -46,7 +46,7 @@
         </div>
         {% else %}
         <div class="bg-white rounded-xl shadow-sm border border-dashed border-gray-300 p-12 text-center max-w-2xl mx-auto">
-            <div class="text-6xl mb-4 text-gray-300">💔</div>
+            <div class="text-6xl mb-4 text-gray-300">&#128148;</div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">Ainda não há matches</h3>
             <p class="text-gray-500 mb-6">Comece a explorar o feed e deslize para a direita nos pratos que dão água na boca.</p>
             <a href="{{ url_for('discovery.feed') }}" class="inline-block bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-full shadow transition-transform transform hover:scale-105">

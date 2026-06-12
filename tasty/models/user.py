@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .business_swipe import BusinessSwipe
 
 class User(db.Model):
+    """Modelo de Usuário, representando os usuários do sistema, incluindo suas informações pessoais, credenciais de acesso, preferências e relacionamentos com estabelecimentos parceiros (businesses) e seus tipos (business types)."""
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -22,23 +23,19 @@ class User(db.Model):
     photo: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     google_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    facebook_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     cpf: Mapped[Optional[str]] = mapped_column(String(20), unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
 
-    # FK Role
     role_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("roles.id", ondelete="SET NULL"), index=True, nullable=True
     )
 
-    # Relacionamentos
     role: Mapped[Optional["Role"]] = relationship("Role", back_populates="users")
     addresses: Mapped[List["Address"]] = relationship("Address", back_populates="user", cascade="all, delete-orphan")
     swipes: Mapped[List["BusinessSwipe"]] = relationship("BusinessSwipe", back_populates="user", cascade="all, delete-orphan")
     
-    # N:N العلاقات
     owned_businesses: Mapped[List["Business"]] = relationship(
         "Business", secondary="business_owners", back_populates="owners"
     )

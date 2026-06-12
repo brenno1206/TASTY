@@ -22,7 +22,7 @@
 
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Emoji Representativo</label>
-                    <input type="text" id="emoji-input" name="emoji" placeholder="Ex: 🌮" class="w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
+                    <input type="text" id="emoji-input" name="emoji" placeholder="Ex: &#127790; " class="w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-primary outline-none">
                     <p class="text-xs text-gray-400 mt-1">Pode digitar o emoji pelo teclado! Nós convertemos para você.</p>
                 </div>
 
@@ -59,12 +59,12 @@
                         {% if types %}
                             {% for t in types %}
                             <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="py-4 px-6 text-2xl text-center">{{ t.emoji | safe if t.emoji else '🍽️' }}</td>
+                                <td class="py-4 px-6 text-2xl text-center">{{ t.emoji | safe if t.emoji else '&#127869;' }}</td>
                                 <td class="py-4 px-6 font-bold text-gray-800">{{ t.name }}</td>
                                 <td class="py-4 px-6 text-sm text-gray-500">{{ t.description or 'Sem descrição.' }}</td>
                                 <td class="py-4 px-6 text-right flex justify-end items-center gap-3">
                                     <a href="{{ url_for('businesstype.edit_view', id=t.id) }}" class="text-gray-400 hover:text-primary text-xs font-bold transition-colors">
-                                        ⚙️ Editar no Admin
+                                        &#9881; Editar no Admin
                                     </a>
                                 </td>
                             </tr>
@@ -87,7 +87,6 @@
 
 {% block scripts %}
 <script>
-    // Intercepta o formulário antes de enviar os dados pro Python
     document.getElementById('category-form').addEventListener('submit', function(e) {
         const emojiInput = document.getElementById('emoji-input');
         const rawValue = emojiInput.value;
@@ -95,20 +94,15 @@
         if (rawValue) {
             let htmlEntityString = '';
             
-            // Itera sobre a string lidando com Emojis (que podem ocupar mais de 1 byte/Surrogate Pairs)
             for (let char of rawValue) {
                 let codePoint = char.codePointAt(0);
                 
-                // Se o caractere for fora do padrão ASCII comum (ex: emojis), converte pra HTML Code
                 if (codePoint > 127) {
                     htmlEntityString += '&#' + codePoint + ';';
                 } else {
-                    // Mantém texto normal (caso o usuário tenha digitado um emoji + um espaço)
                     htmlEntityString += char;
                 }
             }
-            
-            // Substitui o valor no input pelo código HTML traduzido
             emojiInput.value = htmlEntityString;
         }
     });

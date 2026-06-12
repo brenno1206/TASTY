@@ -8,12 +8,12 @@ if TYPE_CHECKING:
     from .user import User
 
 class Role(db.Model):
+    """Modelo de Role, representando as permissões associadas a cada nível de acesso (Level) dentro do sistema, permitindo a definição de diferentes papéis e suas respectivas permissões para os usuários."""
     __tablename__ = "roles"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
     
-    # FK para Level
     level_id: Mapped[Optional[int]] = mapped_column(
         Integer, 
         ForeignKey("levels.id", ondelete="SET NULL"), 
@@ -21,7 +21,6 @@ class Role(db.Model):
         index=True
     )
 
-    # Relacionamentos
     level: Mapped[Optional["Level"]] = relationship("Level", back_populates="roles")
     users: Mapped[List["User"]] = relationship("User", back_populates="role")
 

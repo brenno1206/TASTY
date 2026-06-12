@@ -40,7 +40,7 @@ dev = [
 test = [
     "pytest>=8.3",
     "pytest-cov>=5.0",
-    "pytest-flask"
+    "pytest-mock"
 ]
 
 [tool.pytest.ini_options]

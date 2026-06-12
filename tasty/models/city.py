@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from .address import Address
 
 class City(db.Model):
+    """Modelo de Cidade, utilizado para armazenar informações de localização geográfica, facilitando o agrupamento e a busca de estabelecimentos parceiros e usuários por região."""
     __tablename__ = "cities"
 
     __table_args__ = (

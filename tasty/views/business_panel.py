@@ -1,7 +1,6 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, current_app
 from tasty.utils.decorators import login_required, role_required
 import tasty.services.business_service as b_service
-# NOVO IMPORT AQUI:
 import tasty.services.business_type_service as bt_service 
 
 bp_business_panel = Blueprint("business_panel", __name__, url_prefix="/my-business")
@@ -15,7 +14,7 @@ def list_my_businesses():
     user_id = session["user_id"]
     
     my_places = [b for b in all_places if any(owner.id == user_id for owner in b.owners)]
-    
+    current_app.logger.info(f"Proprietário ID {user_id} acessou a lista de seus estabelecimentos. Total encontrados: {len(my_places)}.")
     return render_template("owner/my_businesses.html", businesses=my_places)
 
 
@@ -34,7 +33,6 @@ def register_business():
             "closing_time": request.form.get("closing_time"),
             "owners": [session["user_id"]],
             
-            # NOVO: Extrai a categoria selecionada pelo dono no HTML
             "business_types": [int(t) for t in request.form.getlist("business_types") if t.isdigit()],
             
             "addresses": [{
@@ -52,11 +50,12 @@ def register_business():
         success, msg, code = b_service.create_business(data)
         if success:
             flash("Estabelecimento cadastrado com sucesso!", "success")
+            current_app.logger.info(f"Proprietário ID {session.get('user_id')} cadastrou novo estabelecimento: {data['corporate_name']}.")
             return redirect(url_for("business_panel.list_my_businesses"))
         flash(msg, "danger")
 
-    # NOVO: Envia os tipos disponíveis para o template
     tipos = bt_service.get_all_business_types()
+    current_app.logger.info(f"Proprietário ID {session.get('user_id')} acessou a página de cadastro de estabelecimento. Total categorias disponíveis: {len(tipos)}.")
     return render_template("owner/business_form.html", action="Cadastrar", business_types=tipos)
 
 
@@ -70,6 +69,7 @@ def edit_business(id):
 
     if not business or not any(owner.id == user_id for owner in business.owners):
         flash("Estabelecimento não encontrado ou permissão negada.", "danger")
+        current_app.logger.warning(f"Proprietário ID {user_id} tentou acessar edição do estabelecimento ID {id}, mas não foi encontrado ou permissão negada.")
         return redirect(url_for("business_panel.list_my_businesses"))
 
     if request.method == "POST":
@@ -80,7 +80,6 @@ def edit_business(id):
             "opening_time": request.form.get("opening_time"),
             "closing_time": request.form.get("closing_time"),
             
-            # NOVO: Atualiza a categoria caso o dono a mude
             "business_types": [int(t) for t in request.form.getlist("business_types") if t.isdigit()]
         }
         
@@ -98,11 +97,12 @@ def edit_business(id):
         success, msg, code = b_service.update_business(id, data)
         if success:
             flash("Informações salvas com sucesso.", "success")
+            current_app.logger.info(f"Proprietário ID {user_id} editou estabelecimento ID {id}. Dados atualizados: {data}")
             return redirect(url_for("business_panel.list_my_businesses"))
         flash(msg, "danger")
 
-    # NOVO: Envia os tipos disponíveis para o template
     tipos = bt_service.get_all_business_types()
+    current_app.logger.info(f"Proprietário ID {session.get('user_id')} acessou a edição do estabelecimento ID {id}. Total categorias disponíveis: {len(tipos)}.")
     return render_template("owner/business_form.html", business=business, action="Editar", business_types=tipos)
 
 
@@ -110,14 +110,16 @@ def edit_business(id):
 @login_required
 @role_required("owner")
 def delete_business(id):
-    # (Mantido intacto)
+    """Permite ao proprietário excluir um restaurante que ele possui."""
     business = b_service.get_business(id)
     user_id = session["user_id"]
 
     if not business or not any(owner.id == user_id for owner in business.owners):
         flash("Permissão negada.", "danger")
+        current_app.logger.warning(f"Proprietário ID {user_id} tentou excluir estabelecimento ID {id}, mas não foi encontrado ou permissão negada.")
         return redirect(url_for("business_panel.list_my_businesses"))
 
     success, msg, code = b_service.delete_business(id)
     flash(msg, "success" if success else "danger")
+    current_app.logger.info(f"Proprietário ID {user_id} excluiu estabelecimento ID {id}. Sucesso: {success}. Mensagem: {msg}")
     return redirect(url_for("business_panel.list_my_businesses"))

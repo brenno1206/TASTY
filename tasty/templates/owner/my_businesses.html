@@ -43,10 +43,9 @@
                     <h3 class="font-bold text-xl text-gray-800 mb-1">{{ b.trade_name }}</h3>
                     <p class="text-xs text-gray-500 mb-2">CNPJ: {{ b.cnpj }}</p>
                     
-                    <!-- NOVO: Exibição da Categoria na Listagem -->
                     {% if b.business_types %}
                     <span class="inline-block bg-orange-100 text-orange-800 text-xs font-bold px-2.5 py-1 rounded-full mb-3">
-                        {{ b.business_types[0].emoji | safe if b.business_types[0].emoji else '🍽️' }} {{ b.business_types[0].name }}
+                        {{ b.business_types[0].emoji | safe if b.business_types[0].emoji else '&#127860;' }} {{ b.business_types[0].name }}
                     </span>
                     {% else %}
                     <span class="inline-block bg-gray-100 text-gray-500 text-xs font-bold px-2.5 py-1 rounded-full mb-3">
@@ -59,7 +58,7 @@
                     </p>
                     
                     <div class="flex items-center gap-2 text-sm text-gray-500">
-                        <span>🕒</span> {{ b.opening_time or '--' }} às {{ b.closing_time or '--' }}
+                        <span>&#128336;</span> {{ b.opening_time or '--' }} às {{ b.closing_time or '--' }}
                     </div>
                 </div>
                 
@@ -71,7 +70,7 @@
                     <form action="{{ url_for('business_panel.delete_business', id=b.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja desativar este restaurante do aplicativo?');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-bold">
-                            Exluir
+                            Excluir
                         </button>
                     </form>
                 </div>
@@ -80,7 +79,7 @@
         </div>
         {% else %}
         <div class="bg-white rounded-xl shadow-sm border border-dashed border-gray-300 p-12 text-center">
-            <div class="text-6xl mb-4">🏪</div>
+            <div class="text-6xl mb-4">&#127978;</div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">Você ainda não possui restaurantes ativos.</h3>
             <p class="text-gray-500 mb-6">Cadastre seu primeiro estabelecimento para começar a receber clientes.</p>
             <a href="{{ url_for('business_panel.register_business') }}" class="inline-block bg-primary hover:bg-primary-dark text-white font-bold py-2 px-6 rounded shadow transition-colors">

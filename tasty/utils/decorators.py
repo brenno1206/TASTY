@@ -18,7 +18,6 @@ def role_required(role_name):
         def decorated_function(*args, **kwargs):
             if session.get("user_role") != role_name:
                 flash("Você não tem permissão para acessar esta área.", "danger")
-                # Redireciona o usuário de volta para o dashboard correto dele
                 user_role = session.get("user_role")
                 if user_role:
                     return redirect(url_for(f"{user_role}.dashboard"))

@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 def init_app(app):
+    """Inicializa a extensão SQLAlchemy com o aplicativo Flask."""
+    app.logger.info("Inicializando extensão SQLAlchemy...")
     db.init_app(app)
 
 def register_models():
@@ -11,16 +13,3 @@ def register_models():
     no metadata do SQLAlchemy antes de operacoes como create_all().
     """
     import tasty.models
-    ''' 
-    import tasty.models.user
-    import tasty.models.role
-    import tasty.models.level
-    import tasty.models.address
-    import tasty.models.city
-    import tasty.models.business
-    import tasty.models.business_owner
-    import tasty.models.business_type
-    import tasty.models.photo
-    import tasty.models.business_has_type
-    import tasty.models.preference
-    '''

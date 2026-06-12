@@ -1,7 +1,5 @@
 from invoke import task
-from datetime import datetime
 import os
-import zipfile
 import shutil
 from dotenv import load_dotenv
 
@@ -117,7 +115,6 @@ def drop_db(c):
     Apaga todas as tabelas do banco de dados.
     """
     load_env("dev")
-    # pty=True é OBRIGATÓRIO aqui para o terminal deixar você digitar "y" na confirmação
     c.run("flask drop-db", env=os.environ.copy(), pty=True)
 
 
@@ -136,7 +133,6 @@ def seed_dev(c):
     Executa o comando de seed garantindo o ambiente de desenvolvimento.
     """
     load_env("dev")
-    # Trocado os.system pelo c.run do Invoke, mantendo o pty=True para interações
     c.run("flask seed-dev", env=os.environ.copy(), pty=True)
 
 

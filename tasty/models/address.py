@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from .city import City
 
 class Address(db.Model):
+    """Modelo de Endereço, utilizado para armazenar informações de localização tanto de Usuários quanto de Estabelecimentos Parceiros."""
     __tablename__ = "addresses"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -16,12 +17,9 @@ class Address(db.Model):
     number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     district: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     zipcode: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
-    
-    # Coordenadas geográficas cruciais para cálculo de distância física (Algoritmo de Match por Proximidade)
     latitude: Mapped[Optional[float]] = mapped_column(Numeric(10, 8), nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(Numeric(11, 8), nullable=True)
 
-    # Chaves Estrangeiras
     user_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=True
     )
@@ -32,7 +30,6 @@ class Address(db.Model):
         Integer, ForeignKey("cities.id", ondelete="SET NULL"), index=True, nullable=True
     )
 
-    # Relacionamentos
     user: Mapped[Optional["User"]] = relationship("User", back_populates="addresses")
     business: Mapped[Optional["Business"]] = relationship("Business", back_populates="addresses")
     city: Mapped[Optional["City"]] = relationship("City", back_populates="addresses")

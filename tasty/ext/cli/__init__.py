@@ -1,13 +1,12 @@
-import os
 import click
-from flask import current_app
 from werkzeug.security import generate_password_hash
-from sqlalchemy import select
 from tasty.ext.db import db
 from tasty.models import Level, Role, User, BusinessType, City, Business, Address, Photo
 from tasty.ext.cli.security import ensure_safe_seed_environment
 
 def init_app(app):
+    """Registra os comandos CLI personalizados relacionados à administração do banco de dados e operações de seed."""
+    app.logger.info("Registrando comandos CLI personalizados...")
 
     @app.cli.command("create-db")
     def create_db():
@@ -52,7 +51,7 @@ def init_app(app):
                 levels[name] = lv
             db.session.flush()
 
-            # 2. PAPEIS (ROLES) - Todos com name="admin" usando o modelo flexível!
+            # 2. PAPEIS (ROLES)
             roles_admin = {
                 "Max": Role(name="admin", level=levels["Max"]),
                 "Premium": Role(name="admin", level=levels["Premium"]),
@@ -98,12 +97,11 @@ def init_app(app):
                 cities[c_name] = city
             db.session.flush()
 
-            # 5. USUÁRIOS: 10 Admins
+            # 5. USUÁRIOS
             admins_info = [
                 ("Brenno Gomes Breda", "brenno@admin.com", "111.111.111-01", "Max"),
                 ("Daphne Rocha", "daphne@admin.com", "111.111.111-02", "Max"),
-                ("Prof. Abrantes Araújo", "abrantes@admin.com", "111.111.111-03", "Max"),
-                ("Jean-Remi", "jeanremi@admin.com", "111.111.111-04", "Premium"),
+                ("Rafael", "rafael@admin.com", "111.111.111-04", "Premium"),
                 ("Admin Suporte 1", "suporte1@admin.com", "111.111.111-05", "Support"),
                 ("Admin Suporte 2", "suporte2@admin.com", "111.111.111-06", "Support"),
                 ("Admin Qualidade 1", "qa1@admin.com", "111.111.111-07", "Basic"),
@@ -115,7 +113,7 @@ def init_app(app):
                 u = User(name=name, email=email, cpf=cpf, password=default_pwd, role=roles_admin[lvl], is_active=True)
                 db.session.add(u)
 
-            # 6. USUÁRIOS: 10 Clientes
+            # 6. USUÁRIOS: Clientes
             clients_info = [
                 ("Isabel Emília Sterim Saade", "isabel@client.com", "222.222.222-01", "Rua Castelo Branco", 101, "Praia da Costa", "29101-000", -20.3297, -40.2818, "Vila Velha"),
                 ("Maria Carla dos Santos Bellote", "maria@client.com", "222.222.222-02", "Av. Dante Michelini", 202, "Enseada do Suá", "29050-000", -20.3150, -40.2905, "Vitória"),
@@ -134,7 +132,7 @@ def init_app(app):
                 u.preferences.extend([b_types["Pizzaria"], b_types["Hamburgueria"], b_types["Comida Japonesa"]])
                 db.session.add(u)
 
-            # 7. USUÁRIOS: 3 Owners
+            # 7. USUÁRIOS: Owners
             owners_info = [
                 ("Grupo A (2 Restaurantes)", "owner_a@tasty.com", "333.333.333-01"),
                 ("Grupo B (3 Restaurantes)", "owner_b@tasty.com", "333.333.333-02"),
@@ -191,19 +189,19 @@ def init_app(app):
             db.session.commit()
             
             click.echo("\n" + "="*70)
-            click.echo("✅ SEED DE DESENVOLVIMENTO MASSIVO CONCLUÍDO COM SUCESSO!")
-            click.echo("🔑 Senha Universal Para Todas as Contas: 123456")
+            click.echo("SEED DE DESENVOLVIMENTO MASSIVO CONCLUÍDO COM SUCESSO!")
+            click.echo("Senha Universal Para Todas as Contas: 123456")
             click.echo("="*70 + "\n")
             
-            click.echo("--- 🛡️  ADMINISTRADORES (Acessam: /admin/dashboard) ---")
+            click.echo("---   ADMINISTRADORES (Acessam: /admin/dashboard) ---")
             for name, email, _, lvl in admins_info:
                 click.echo(f"  [Nível: {lvl.ljust(7)}] {email.ljust(25)} -> {name}")
                 
-            click.echo("\n--- 🍔 CLIENTES (Acessam: /client/dashboard | /discovery/feed) ---")
+            click.echo("\n---  CLIENTES (Acessam: /client/dashboard | /discovery/feed) ---")
             for name, email, _, road, _, dist, _, _, _, _ in clients_info:
                 click.echo(f"  {email.ljust(25)} -> Radar: {road}, {dist}")
                 
-            click.echo("\n--- 🏪 PARCEIROS COMERCIAIS (Acessam: /owner/dashboard | /my-business/list) ---")
+            click.echo("\n---  PARCEIROS COMERCIAIS (Acessam: /owner/dashboard | /my-business/list) ---")
             for name, email, _ in owners_info:
                 click.echo(f"  {email.ljust(25)} -> {name}")
             click.echo("\n" + "="*70)

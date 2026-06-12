@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from .role import Role
 
 class Level(db.Model):
+    """Modelo de Nível de Acesso, representando os diferentes níveis hierárquicos de acesso dentro do sistema, como Admin, User, etc., e associando-os às suas respectivas permissões (Roles)."""
     __tablename__ = "levels"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -14,7 +15,6 @@ class Level(db.Model):
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    # Relacionamento 1:N com Role
     roles: Mapped[List["Role"]] = relationship("Role", back_populates="level")
 
     def __repr__(self) -> str:

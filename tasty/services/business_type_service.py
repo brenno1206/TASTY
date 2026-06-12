@@ -1,6 +1,6 @@
 from typing import Dict, Any, Tuple, Optional, List
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import select, delete
+from sqlalchemy import select
 from tasty.models import BusinessType
 from tasty.ext.db import db
 
@@ -10,7 +10,6 @@ def create_business_type(data: Dict[str, Any]) -> Tuple[bool, str, int]:
         return False, "Dados inválidos.", 400
         
     try:
-        # Validação de unicidade simples baseada no nome
         name = data.get("name")
         if not name:
             return False, "O nome da categoria é obrigatório.", 400
@@ -50,7 +49,6 @@ def update_business_type(type_id: int, data: Dict[str, Any]) -> Tuple[bool, str,
         
     try:
         if "name" in data:
-            # Verifica se o novo nome não colide com outra categoria existente
             new_name = data["name"]
             stmt = select(BusinessType).where(BusinessType.name.ilike(new_name), BusinessType.id != type_id)
             if db.session.execute(stmt).scalar_one_or_none():
@@ -78,8 +76,6 @@ def delete_business_type(type_id: int) -> Tuple[bool, str, int]:
         return False, "Categoria não encontrada.", 404
         
     try:
-        # A exclusão no banco resolverá as tabelas associativas N:N (business_has_type, preferences)
-        # graças ao 'ondelete="CASCADE"' configurado nessas tabelas intermediárias.
         db.session.delete(b_type)
         db.session.commit()
         return True, "Categoria excluída com sucesso.", 200
@@ -91,6 +87,5 @@ def delete_business_type(type_id: int) -> Tuple[bool, str, int]:
 
 def get_all_business_types() -> List[BusinessType]:
     """Retorna todas as categorias disponíveis para listagem no app."""
-    # Ordenado alfabeticamente para melhor UX no front-end
     stmt = select(BusinessType).order_by(BusinessType.name)
     return list(db.session.execute(stmt).scalars().all())

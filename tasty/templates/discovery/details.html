@@ -10,12 +10,11 @@
 <main class="min-h-screen bg-gray-50 py-10 px-6">
     <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
         
-        <!-- Capa do Restaurante -->
         <div class="h-80 relative bg-gray-200">
             {% if business.photos %}
                 <img src="{{ business.photos[0].url }}" alt="{{ business.trade_name }}" class="w-full h-full object-cover">
             {% else %}
-                <div class="w-full h-full flex items-center justify-center text-gray-400 text-6xl">🍽️</div>
+                <div class="w-full h-full flex items-center justify-center text-gray-400 text-6xl">&#127860;</div>
             {% endif %}
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
             
@@ -28,18 +27,17 @@
                     <h1 class="text-4xl font-black text-white drop-shadow-md">{{ business.trade_name }}</h1>
                     {% if business.business_types %}
                         <p class="text-white/80 font-bold mt-1 flex items-center gap-2">
-                            <span>{{ business.business_types[0].emoji | safe if business.business_types[0].emoji else '🍔' }}</span>
+                            <span>{{ business.business_types[0].emoji | safe if business.business_types[0].emoji else '&#127828;' }}</span>
                             {{ business.business_types[0].name }}
                         </p>
                     {% endif %}
                 </div>
                 <div class="bg-primary text-white font-black px-4 py-2 rounded-xl shadow-lg">
-                    📍 {{ business.distance_km }} km
+                    &#128204; {{ business.distance_km }} km
                 </div>
             </div>
         </div>
 
-        <!-- Conteúdo do Perfil -->
         <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="md:col-span-2 space-y-8">
                 <div>
@@ -54,7 +52,7 @@
                     {% if business.addresses %}
                         {% set addr = business.addresses[0] %}
                         <p class="text-gray-600 bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-start gap-3">
-                            <span class="text-xl">🗺️</span>
+                            <span class="text-xl">&#128506;</span>
                             <span>
                                 <strong class="block text-gray-800">{{ addr.road }}, {{ addr.number or 'S/N' }}</strong>
                                 {{ addr.district }}<br>
@@ -68,12 +66,11 @@
                 </div>
             </div>
 
-            <!-- Side Info -->
             <div class="bg-orange-50 p-6 rounded-2xl border border-orange-100 h-fit space-y-6">
                 <div>
                     <h3 class="font-bold text-orange-900 mb-2 uppercase text-xs tracking-widest">Horário de Funcionamento</h3>
                     <div class="flex items-center gap-2 text-orange-800 font-medium">
-                        <span class="text-xl">🕒</span>
+                        <span class="text-xl">&#128338;</span>
                         {{ business.opening_time or '--:--' }} às {{ business.closing_time or '--:--' }}
                     </div>
                 </div>

@@ -14,18 +14,14 @@ def swipe_business(
 ) -> Tuple[bool, str, int]:
     """Registra ou atualiza uma interação de swipe do usuário com um estabelecimento."""
     try:
-        # 1. Validação de pré-condição: Verifica se o estabelecimento existe e está ativo
-        # Isso evita estourar erros brutos de Foreign Key Violation do PostgreSQL
         business_stmt = select(Business.id).where(Business.id == business_id, Business.is_active == True)
         if not db.session.execute(business_stmt).scalar_one_or_none():
             return False, "Estabelecimento não encontrado ou inativo.", 404
 
-        # Validação de usuário
         user_stmt = select(User.id).where(User.id == user_id, User.is_active == True)
         if not db.session.execute(user_stmt).scalar_one_or_none():
             return False, "Usuário não encontrado ou inativo.", 404
 
-        # 2. Busca ou atualiza o Swipe
         stmt = select(BusinessSwipe).where(
             BusinessSwipe.user_id == user_id,
             BusinessSwipe.business_id == business_id
@@ -58,10 +54,8 @@ def get_next_businesses_for_user(user_id: int, limit: int = 20) -> List[Business
     20% Proximidade Geográfica (Mais perto do endereço principal do cliente)
     """
     try:
-        # 1. Puxa os dados de localização e preferências do cliente
         user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         if not user or not user.addresses or not user.preferences:
-            # Fallback seguro caso onboarding esteja incompleto
             stmt = select(Business).outerjoin(BusinessSwipe, (Business.id == BusinessSwipe.business_id) & (BusinessSwipe.user_id == user_id)).where(Business.is_active == True, BusinessSwipe.id.is_(None)).limit(limit)
             return list(db.session.execute(stmt).scalars().all())
 
@@ -69,7 +63,6 @@ def get_next_businesses_for_user(user_id: int, limit: int = 20) -> List[Business
         user_lat, user_lon = user_addr.latitude, user_addr.longitude
         user_pref_ids = [p.id for p in user.preferences]
 
-        # 2. Busca todos os candidatos válidos (Restaurantes Ativos e sem Swipe)
         stmt_candidates = (
             select(Business)
             .outerjoin(BusinessSwipe, (Business.id == BusinessSwipe.business_id) & (BusinessSwipe.user_id == user_id))
@@ -79,29 +72,22 @@ def get_next_businesses_for_user(user_id: int, limit: int = 20) -> List[Business
 
         scored_candidates = []
         for b in candidates:
-            # Cálculo de Afinidade (Tags correspondentes)
             b_type_ids = [t.id for t in b.business_types]
             matches = set(user_pref_ids).intersection(set(b_type_ids))
             
-            # Normalização do score de tags (0.0 a 1.0)
             tag_score = len(matches) / len(user_pref_ids) if user_pref_ids else 0
 
-            # Cálculo de Distância Real (Haversine)
             dist = get_distance_between_user_and_business(user_id, b.id)
             if dist is None:
-                dist = 50.0 # Penalidade padrão (50km) se estiver sem coordenadas
+                dist = 50.0
             
-            # Normalização do score de distância (Inverso: mais perto = score maior)
-            # Definimos uma janela de corte de 30km para o cálculo do peso
             distance_score = max(0, (30.0 - dist) / 30.0)
 
-            # Cálculo do Score Composto Final
             final_score = (0.8 * tag_score) + (0.2 * distance_score)
             
             b.distance_km = round(dist, 1) if dist is not None else "--"
             scored_candidates.append((final_score, b))
 
-        # 3. Ordena decrescentemente pelo score composto e aplica o limite
         scored_candidates.sort(key=lambda x: x[0], reverse=True)
         return [item[1] for item in scored_candidates[:limit]]
 
@@ -152,7 +138,6 @@ def reset_user_swipes(user_id: int) -> Tuple[bool, str, int]:
     Otimizado para execução em lote nativa (Bulk Delete).
     """
     try:
-        # Exclui diretamente no banco sem carregar objetos para a memória do Python
         stmt = delete(BusinessSwipe).where(BusinessSwipe.user_id == user_id)
         db.session.execute(stmt)
         db.session.commit()

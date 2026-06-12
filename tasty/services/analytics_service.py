@@ -4,12 +4,10 @@ from tasty.models import Business, BusinessSwipe, User, Role
 
 def get_restaurant_metrics(business_id: int) -> dict:
     """Calcula estatísticas agregadas de interações para um restaurante específico."""
-    # Total de visualizações no feed (Contagem total de registros de swipes para o ID)
     total_views = db.session.execute(
         select(func.count(BusinessSwipe.id)).where(BusinessSwipe.business_id == business_id)
     ).scalar() or 0
 
-    # Total de Matches (Likes + Super Likes)
     total_matches = db.session.execute(
         select(func.count(BusinessSwipe.id)).where(
             BusinessSwipe.business_id == business_id,
@@ -17,7 +15,6 @@ def get_restaurant_metrics(business_id: int) -> dict:
         )
     ).scalar() or 0
 
-    # Super Likes isolados
     super_likes = db.session.execute(
         select(func.count(BusinessSwipe.id)).where(
             BusinessSwipe.business_id == business_id,
@@ -25,7 +22,6 @@ def get_restaurant_metrics(business_id: int) -> dict:
         )
     ).scalar() or 0
 
-    # Cálculo da taxa de conversão (Matches / Views)
     conversion_rate = round((total_matches / total_views) * 100, 1) if total_views > 0 else 0.0
 
     return {
@@ -39,19 +35,16 @@ def get_restaurant_metrics(business_id: int) -> dict:
 
 def get_owner_portfolio_metrics(owner_id: int) -> dict:
     """Consolida os dados de telemetria de todas as filiais de uma conta empresarial."""
-    # Busca os IDs dos estabelecimentos que pertencem ao Owner
     stmt_businesses = select(Business.id).join(Business.owners).where(User.id == owner_id, Business.is_active == True)
     business_ids = db.session.execute(stmt_businesses).scalars().all()
 
     if not business_ids:
         return {"total_views": 0, "total_matches": 0, "avg_conversion_rate": 0.0, "active_stores": 0}
 
-    # Agrega visualizações totais do grupo econômico
     total_views = db.session.execute(
         select(func.count(BusinessSwipe.id)).where(BusinessSwipe.business_id.in_(business_ids))
     ).scalar() or 0
 
-    # Agrega matches totais do grupo econômico
     total_matches = db.session.execute(
         select(func.count(BusinessSwipe.id)).where(
             BusinessSwipe.business_id.in_(business_ids),
@@ -71,19 +64,16 @@ def get_owner_portfolio_metrics(owner_id: int) -> dict:
 def get_global_metrics() -> dict:
     """Calcula a volumetria total da plataforma para o Dashboard do Administrador."""
     
-    # 1. Total de Clientes Ativos
     total_clients = db.session.execute(
         select(func.count(User.id))
         .join(Role)
         .where(Role.name == "client", User.is_active == True)
     ).scalar() or 0
 
-    # 2. Total de Restaurantes Ativos
     total_businesses = db.session.execute(
         select(func.count(Business.id)).where(Business.is_active == True)
     ).scalar() or 0
 
-    # 3. Total de Interações (Swipes gerados no aplicativo)
     total_swipes = db.session.execute(
         select(func.count(BusinessSwipe.id))
     ).scalar() or 0

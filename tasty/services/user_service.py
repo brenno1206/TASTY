@@ -1,5 +1,4 @@
 from typing import Dict, Any, Tuple, Optional, List
-from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
@@ -11,6 +10,7 @@ from tasty.ext.db import db
 # ==========================================================
 
 def get_or_create_level(name: str, description: str = "") -> Level:
+    """Busca um nível de acesso pelo nome ou o cria caso não exista, garantindo integridade e evitando duplicatas."""
     stmt = select(Level).where(Level.name == name)
     level = db.session.execute(stmt).scalar_one_or_none()
     
@@ -21,6 +21,7 @@ def get_or_create_level(name: str, description: str = "") -> Level:
     return level
 
 def get_or_create_role(name: str, level_name: str = None) -> Role:
+    """Busca um papel de acesso pelo nome ou o cria caso não exista, associando-o a um nível se fornecido."""
     stmt = select(Role).where(Role.name == name)
     role = db.session.execute(stmt).scalar_one_or_none()
     
@@ -42,14 +43,13 @@ def get_or_create_role(name: str, level_name: str = None) -> Role:
 # ==========================================================
 
 def _create_user_with_role(data: Dict[str, Any], role_name: str) -> Tuple[bool, str, int]:
+    """Função auxiliar para criação de usuários com um papel específico, garantindo validações e integridade."""
     if not data or not isinstance(data, dict):
         return False, "Erro: Dados inválidos.", 400
     
-    # Copia o dicionário para evitar mutações colaterais no escopo de quem chamou a função
     payload = data.copy()
     
     try:
-        # Validação estrita de unicidade antes da tentativa de inserção
         if db.session.execute(select(User).where(User.email == payload.get("email"))).scalar_one_or_none():
             return False, "Erro: Email já registrado.", 400
             
@@ -58,28 +58,22 @@ def _create_user_with_role(data: Dict[str, Any], role_name: str) -> Tuple[bool, 
         
         role = get_or_create_role(role_name)
         
-        # Isolamento de estruturas de relacionamentos
         addresses_data = payload.pop("addresses", [])
         preferences_ids = payload.pop("preferences", [])
         
-        # Tratamento seguro da credencial secreta
         if "password" in payload:
             payload["password"] = generate_password_hash(payload["password"])
             
-        # Instanciação mapeada do Usuário
         new_user = User(
             name=payload.get("name"),
             email=payload.get("email"),
             phone=payload.get("phone"),
             photo=payload.get("photo"),
             password=payload.get("password"),
-            google_id=payload.get("google_id"),
-            facebook_id=payload.get("facebook_id"),
             cpf=payload.get("cpf"),
             role_id=role.id
         )
         
-        # Vinculo seguro de endereços
         for addr in addresses_data:
             new_user.addresses.append(
                 Address(
@@ -93,7 +87,6 @@ def _create_user_with_role(data: Dict[str, Any], role_name: str) -> Tuple[bool, 
                 )
             )
             
-        # Vinculo N:N de preferências gastronômicas
         if preferences_ids:
             b_types = db.session.execute(
                 select(BusinessType).where(BusinessType.id.in_(preferences_ids))
@@ -110,14 +103,12 @@ def _create_user_with_role(data: Dict[str, Any], role_name: str) -> Tuple[bool, 
 
 def _update_user_dynamically(user: User, data: Dict[str, Any]) -> None:
     """Atualiza de forma segura atributos diretos e relacionamentos permitidos."""
-    # Lista restrita de campos primitivos que podem sofrer mutação genérica por API cadastral
-    allowed_fields = {"name", "phone", "photo", "google_id", "facebook_id", "cpf"}
+    allowed_fields = {"name", "phone", "photo", "cpf"}
     
     for key in allowed_fields:
         if key in data:
             setattr(user, key, data[key])
             
-    # Atualização estrutural de endereços associados (Substituição por cascade completo)
     if "addresses" in data:
         user.addresses.clear()
         for addr in data["addresses"]:
@@ -133,7 +124,6 @@ def _update_user_dynamically(user: User, data: Dict[str, Any]) -> None:
                 )
             )
             
-    # Atualização N:N das preferências
     if "preferences" in data:
         user.preferences.clear()
         if data["preferences"]:
@@ -143,9 +133,11 @@ def _update_user_dynamically(user: User, data: Dict[str, Any]) -> None:
             user.preferences.extend(b_types)
 
 def _soft_delete_user(user: User) -> None:
+    """Realiza um soft delete marcando o usuário como inativo, preservando dados históricos e relações."""
     user.is_active = False
     
 def _get_active_users_by_role(role_name: str) -> List[User]:
+    """Retorna uma lista de usuários ativos filtrados por papel específico."""
     stmt = select(User).join(Role).where(Role.name == role_name, User.is_active == True)
     return list(db.session.execute(stmt).scalars().all())
 
@@ -155,13 +147,16 @@ def _get_active_users_by_role(role_name: str) -> List[User]:
 # ==========================================================
 
 def create_admin(data: Dict[str, Any]) -> Tuple[bool, str, int]:
+    """Cria um administrador com validações específicas e atribuição automática de papel."""
     return _create_user_with_role(data, "admin")
 
 def get_admin(admin_id: int) -> Optional[User]:
+    """Retorna um administrador específico pelo ID apenas se estiver ativo, garantindo que o papel seja de admin."""
     stmt = select(User).join(Role).where(User.id == admin_id, Role.name == "admin", User.is_active == True)
     return db.session.execute(stmt).scalar_one_or_none()
 
 def get_admins_by_level(level_name: str) -> List[User]:
+    """Retorna uma lista de administradores filtrados por nível de acesso, garantindo que sejam ativos."""
     stmt = (
         select(User)
         .join(Role)
@@ -175,6 +170,7 @@ def get_admins_by_level(level_name: str) -> List[User]:
     return list(db.session.execute(stmt).scalars().all())
 
 def update_admin(admin_id: int, data: Dict[str, Any]) -> Tuple[bool, str, int]:
+    """Atualiza os dados de um administrador específico, garantindo validações e integridade dos dados."""
     admin = get_admin(admin_id)
     if not admin:
         return False, "Administrador não encontrado ou inativo.", 404
@@ -188,6 +184,7 @@ def update_admin(admin_id: int, data: Dict[str, Any]) -> Tuple[bool, str, int]:
         return False, f"Erro ao atualizar: {str(e)}", 500
 
 def delete_admin(admin_id: int) -> Tuple[bool, str, int]:
+    """Realiza um soft delete em um administrador específico, marcando-o como inativo para preservar dados históricos e relações, garantindo que o papel seja de admin."""
     admin = get_admin(admin_id)
     if not admin:
         return False, "Administrador não encontrado.", 404
@@ -200,6 +197,7 @@ def delete_admin(admin_id: int) -> Tuple[bool, str, int]:
         return False, f"Erro ao desativar: {str(e)}", 500
 
 def get_all_admins() -> List[User]:
+    """Retorna uma lista de todos os administradores ativos, garantindo que o papel seja de admin."""
     return _get_active_users_by_role("admin")
 
 
@@ -208,25 +206,29 @@ def get_all_admins() -> List[User]:
 # ==========================================================
 
 def create_client(data: Dict[str, Any]) -> Tuple[bool, str, int]:
+    """Cria um cliente com validações específicas e atribuição automática de papel."""
     return _create_user_with_role(data, "client")
 
 def get_client(client_id: int) -> Optional[User]:
+    """Retorna um cliente específico pelo ID apenas se estiver ativo, garantindo que o papel seja de client."""
     stmt = select(User).join(Role).where(User.id == client_id, Role.name == "client", User.is_active == True)
     return db.session.execute(stmt).scalar_one_or_none()
 
 def update_client(client_id: int, data: Dict[str, Any]) -> Tuple[bool, str, int]:
+    """Atualiza os dados de um cliente específico, garantindo validações e integridade dos dados."""
     client = get_client(client_id)
     if not client:
         return False, "Cliente não encontrado ou inativo.", 404
     try:
         _update_user_dynamically(client, data)
         db.session.commit()
-        return True, "Cliente updated com sucesso.", 200
+        return True, "Cliente atualizado com sucesso.", 200
     except SQLAlchemyError as e:
         db.session.rollback()
         return False, f"Erro ao atualizar: {str(e)}", 500
 
 def delete_client(client_id: int) -> Tuple[bool, str, int]:
+    """Realiza um soft delete em um cliente específico, marcando-o como inativo para preservar dados históricos e relações, garantindo que o papel seja de client."""
     client = get_client(client_id)
     if not client:
         return False, "Cliente não encontrado.", 404
@@ -239,6 +241,7 @@ def delete_client(client_id: int) -> Tuple[bool, str, int]:
         return False, f"Erro ao desativar: {str(e)}", 500
 
 def get_all_clients() -> List[User]:
+    """Retorna uma lista de todos os clientes ativos, garantindo que o papel seja de client."""
     return _get_active_users_by_role("client")
 
 
@@ -247,13 +250,16 @@ def get_all_clients() -> List[User]:
 # ==========================================================
 
 def create_business_owner(data: Dict[str, Any]) -> Tuple[bool, str, int]:
+    """Cria um dono de negócio com validações específicas e atribuição automática de papel."""
     return _create_user_with_role(data, "owner")
 
 def get_business_owner(owner_id: int) -> Optional[User]:
+    """Retorna um dono de negócio específico pelo ID apenas se estiver ativo, garantindo que o papel seja de owner."""
     stmt = select(User).join(Role).where(User.id == owner_id, Role.name == "owner", User.is_active == True)
     return db.session.execute(stmt).scalar_one_or_none()
 
 def update_business_owner(owner_id: int, data: Dict[str, Any]) -> Tuple[bool, str, int]:
+    """Atualiza os dados de um dono de negócio específico, garantindo validações e integridade dos dados."""
     owner = get_business_owner(owner_id)
     if not owner:
         return False, "Dono de negócio não encontrado ou inativo.", 404
@@ -266,6 +272,7 @@ def update_business_owner(owner_id: int, data: Dict[str, Any]) -> Tuple[bool, st
         return False, f"Erro ao atualizar: {str(e)}", 500
 
 def delete_business_owner(owner_id: int) -> Tuple[bool, str, int]:
+    """Realiza um soft delete em um dono de negócio específico, marcando-o como inativo para preservar dados históricos e relações, garantindo que o papel seja de owner."""
     owner = get_business_owner(owner_id)
     if not owner:
         return False, "Dono de negócio não encontrado.", 404
@@ -278,6 +285,7 @@ def delete_business_owner(owner_id: int) -> Tuple[bool, str, int]:
         return False, f"Erro ao desativar: {str(e)}", 500
 
 def get_all_business_owners() -> List[User]:
+    """Retorna uma lista de todos os donos de negócio ativos, garantindo que o papel seja de owner."""
     return _get_active_users_by_role("owner")
 
 
@@ -291,27 +299,21 @@ def login(email: str, password: str) -> Tuple[bool, str, int, Optional[User]]:
     Retorna erros explícitos e consistentes para cada falha no processo.
     """
     try:
-        # Busca o usuário apenas pelo e-mail, trazendo junto o relacionamento da Role
         stmt = select(User).where(User.email == email)
         user = db.session.execute(stmt).scalar_one_or_none()
         
-        # Caso 1: Usuário não existe no banco de dados
         if not user:
             return False, "Usuário não encontrado. Verifique o e-mail digitado ou cadastre-se.", 404, None
             
-        # Caso 2: O usuário existe, mas foi desativado (soft delete)
         if not user.is_active:
             return False, "Esta conta foi desativada pelo administrador do sistema.", 403, None
             
-        # Caso 3: Senha incorreta
         if not check_password_hash(user.password, password):
             return False, "Senha incorreta. Tente novamente.", 401, None
             
-        # Caso 4: Usuário não possui uma role atrelada (erro de integridade do banco)
         if not user.role:
-            return False, "Sua conta está sem perfil de acesso definido. Contate o suporte.", border_t-4, None
+            return False, "Sua conta está sem perfil de acesso definido. Contate o suporte.", 404, None
             
-        # Sucesso absoluto: retorna o objeto de usuário completo
         return True, "Login bem-sucedido.", 200, user
         
     except SQLAlchemyError as e:

@@ -2,16 +2,14 @@ import math
 import json
 import urllib.request
 import urllib.parse
-import ssl  # <-- Novo import adicionado
+import ssl
 from typing import Dict, Any, Tuple, Optional, List
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from tasty.models import City, User, Business
 from tasty.ext.db import db
 
-# ==========================================================
-# CÁLCULOS DE GEOLOCALIZAÇÃO E GEOCODING
-# ==========================================================
+
 
 def geocode_address(road: str, district: str, zipcode: str, city_name: str = "Vila Velha") -> Tuple[Optional[float], Optional[float]]:
     """
@@ -36,21 +34,19 @@ def geocode_address(road: str, district: str, zipcode: str, city_name: str = "Vi
         
         req = urllib.request.Request(url, headers={'User-Agent': 'TastyAppBackend/1.0'})
         
-        # Cria um contexto SSL que ignora a verificação de certificados (Fix para macOS)
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
         
-        # Passa o contexto na requisição
         with urllib.request.urlopen(req, timeout=5, context=ctx) as response:
             data = json.loads(response.read().decode())
             if data and len(data) > 0:
                 return float(data[0]['lat']), float(data[0]['lon'])
                 
     except Exception as e:
-        print(f"⚠️ Erro de rede ou limite na API Nominatim para '{query_string}': {e}")
+        print(f"Erro de rede ou limite na API Nominatim para '{query_string}': {e}")
         
-    print("ℹ️ Aplicando coordenadas padrão de Vila Velha como contingência.")
+    print("Aplicando coordenadas padrão de Vila Velha como contingência.")
     return -20.3222, -40.3381
 
 
@@ -92,10 +88,6 @@ def get_distance_between_user_and_business(user_id: int, business_id: int) -> Op
     except (SQLAlchemyError, ValueError, TypeError):
         return None
 
-
-# ==========================================================
-# GERENCIAMENTO DE CIDADES (DOMÍNIO)
-# ==========================================================
 
 def create_city(data: Dict[str, Any]) -> Tuple[bool, str, int]:
     """Cadastra uma nova cidade garantindo que não haja duplicatas geográficas."""

@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .business import Business
 
 class BusinessType(db.Model):
+    """Modelo de Tipo de Estabelecimento, representando as categorias dos estabelecimentos parceiros, como restaurantes, bares, cafés, etc."""
     __tablename__ = "business_types"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -15,7 +16,6 @@ class BusinessType(db.Model):
     emoji: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
-    # N:N Relationships
     businesses: Mapped[List["Business"]] = relationship(
         "Business", secondary="business_has_type", back_populates="business_types"
     )

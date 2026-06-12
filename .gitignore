@@ -7,3 +7,4 @@ instance/
 *.log
 *.sqlite3
 .DS_Store
+.coverage

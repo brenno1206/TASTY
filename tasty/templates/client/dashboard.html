@@ -14,18 +14,18 @@
             <div class="absolute -right-20 -top-20 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
             
             <div class="relative z-10 text-center md:text-left mb-6 md:mb-0">
-                <h1 class="text-3xl font-black mb-2">Olá, {{ session.get('user_name', 'Usuário') }}! 🍕</h1>
+                <h1 class="text-3xl font-black mb-2">Olá, {{ session.get('user_name', 'Usuário') }}! &#127829;</h1>
                 <p class="text-primary-100 text-lg">Pronto para encontrar seu próximo restaurante favorito?</p>
             </div>
             
             <a href="{{ url_for('discovery.feed') }}" class="relative z-10 bg-white text-primary hover:bg-gray-100 font-black py-4 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105">
-                🔥 Começar a Deslizar
+                &#128293; Começar a Deslizar
             </a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <a href="{{ url_for('discovery.favorites') }}" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-red-300 hover:shadow-md transition-all group flex items-center gap-6">
-                <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">⭐</div>
+                <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">&#11088;</div>
                 <div>
                     <h3 class="font-bold text-xl text-gray-800">Meus Matches</h3>
                     <p class="text-gray-500 text-sm mt-1">Veja todos os restaurantes que você curtiu.</p>
@@ -33,7 +33,7 @@
             </a>
 
             <a href="{{ url_for('client.edit_client', id=session.get('user_id')) }}" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-blue-300 hover:shadow-md transition-all group flex items-center gap-6">
-                <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">⚙️</div>
+                <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">&#9881;</div>
                 <div>
                     <h3 class="font-bold text-xl text-gray-800">Configurar Conta</h3>
                     <p class="text-gray-500 text-sm mt-1">Atualize seus dados pessoais e senha.</p>
