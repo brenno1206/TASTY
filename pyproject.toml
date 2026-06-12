@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tasty"
-version = "0.1.0"
+version = "1.0.0"
 description = "Tasty is a smart web platform that helps undecided users choose meals and establishments based on their preferences, location, and budget."
 readme = "README.md"
 requires-python = ">=3.9"
