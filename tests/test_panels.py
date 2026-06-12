@@ -1,19 +1,15 @@
 def test_admin_dashboard_access(auth_client, mocker):
     """Verifica se um Admin consegue entrar no painel e se clientes são barrados."""
-    # Isola o banco de dados das estatísticas
     mocker.patch('tasty.services.analytics_service.get_global_metrics', return_value={})
     
-    # 1. Teste de Sucesso (Admin Logado)
-    # Criamos um cliente já com o cookie de "admin"
+
     admin_cli = auth_client(role="admin")
     response_admin = admin_cli.get("/admin/dashboard")
-    assert response_admin.status_code == 200  # Entrou com sucesso!
+    assert response_admin.status_code == 200 
     
-    # 2. Teste de Bloqueio (Cliente tentando entrar no Admin)
-    # Criamos um cliente com cookie de "client"
+
     client_cli = auth_client(role="client")
     response_blocked = client_cli.get("/admin/dashboard")
-    # Deve dar 302 Redirect (Redirecionando para fora dali por falta de permissão)
     assert response_blocked.status_code == 302 
 
 def test_client_dashboard_access(auth_client):

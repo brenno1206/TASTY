@@ -37,7 +37,6 @@ def init_app(app):
             click.echo("Iniciando seed de desenvolvimento...")
             default_pwd = generate_password_hash("123456")
 
-            # 1. NÍVEIS
             levels_data = [
                 ("Max", "Acesso total (Root)."),
                 ("Premium", "Acesso avançado."),
@@ -51,7 +50,6 @@ def init_app(app):
                 levels[name] = lv
             db.session.flush()
 
-            # 2. PAPEIS (ROLES)
             roles_admin = {
                 "Max": Role(name="admin", level=levels["Max"]),
                 "Premium": Role(name="admin", level=levels["Premium"]),
@@ -66,7 +64,6 @@ def init_app(app):
             db.session.add_all([role_owner, role_client])
             db.session.flush()
 
-            # 3. TIPOS DE NEGÓCIO
             bt_data = [
                 ("Pizzaria", "Pizzas artesanais", "&#127829;"),
                 ("Hamburgueria", "Burgers e lanches", "&#127816;"),
@@ -88,7 +85,6 @@ def init_app(app):
                 b_types[name] = bt
             db.session.flush()
 
-            # 4. CIDADES
             cities_data = ["Vila Velha", "Vitória", "Serra", "Cariacica", "Guarapari"]
             cities = {}
             for c_name in cities_data:
@@ -97,7 +93,6 @@ def init_app(app):
                 cities[c_name] = city
             db.session.flush()
 
-            # 5. USUÁRIOS
             admins_info = [
                 ("Brenno Gomes Breda", "brenno@admin.com", "111.111.111-01", "Max"),
                 ("Daphne Rocha", "daphne@admin.com", "111.111.111-02", "Max"),
@@ -113,7 +108,6 @@ def init_app(app):
                 u = User(name=name, email=email, cpf=cpf, password=default_pwd, role=roles_admin[lvl], is_active=True)
                 db.session.add(u)
 
-            # 6. USUÁRIOS: Clientes
             clients_info = [
                 ("Isabel Emília Sterim Saade", "isabel@client.com", "222.222.222-01", "Rua Castelo Branco", 101, "Praia da Costa", "29101-000", -20.3297, -40.2818, "Vila Velha"),
                 ("Maria Carla dos Santos Bellote", "maria@client.com", "222.222.222-02", "Av. Dante Michelini", 202, "Enseada do Suá", "29050-000", -20.3150, -40.2905, "Vitória"),
@@ -132,7 +126,6 @@ def init_app(app):
                 u.preferences.extend([b_types["Pizzaria"], b_types["Hamburgueria"], b_types["Comida Japonesa"]])
                 db.session.add(u)
 
-            # 7. USUÁRIOS: Owners
             owners_info = [
                 ("Grupo A (2 Restaurantes)", "owner_a@tasty.com", "333.333.333-01"),
                 ("Grupo B (3 Restaurantes)", "owner_b@tasty.com", "333.333.333-02"),
@@ -146,28 +139,139 @@ def init_app(app):
             
             db.session.flush()
 
-            # 8. RESTAURANTES
-            photo_pool = [
-                "https://images.unsplash.com/photo-1513104890138-7c749659a591",
-                "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-                "https://images.unsplash.com/photo-1579871494447-9811cf80d66c",
-                "https://images.unsplash.com/photo-1551183053-bf91a1d81141",
-                "https://images.unsplash.com/photo-1594046243098-0fceea9d451e"
-            ]
-
             businesses_data = [
-                {"owner_email": "owner_a@tasty.com", "trade": "Bonna Pizza", "cnpj": "00.000.000/0001-01", "types": ["Pizzaria"], "open": "18:00", "close": "23:59", "num_photos": 4, "road": "Av. Antônio Gil Veloso", "num": 100, "district": "Praia da Costa", "zip": "29101-010", "city": "Vila Velha", "lat": -20.3297, "lng": -40.2818},
-                {"owner_email": "owner_a@tasty.com", "trade": "Burger Station", "cnpj": "00.000.000/0001-02", "types": ["Hamburgueria"], "open": "18:00", "close": "23:00", "num_photos": 3, "road": "R. Jair de Andrade", "num": 500, "district": "Itapuã", "zip": "29101-700", "city": "Vila Velha", "lat": -20.3475, "lng": -40.2913},
-                {"owner_email": "owner_b@tasty.com", "trade": "Sushi Lounge", "cnpj": "00.000.000/0001-03", "types": ["Comida Japonesa"], "open": "19:00", "close": "00:00", "num_photos": 5, "road": "Rua da Lama", "num": 120, "district": "Jardim da Penha", "zip": "29060-230", "city": "Vitória", "lat": -20.2925, "lng": -40.2942},
-                {"owner_email": "owner_b@tasty.com", "trade": "Vegan Life", "cnpj": "00.000.000/0001-04", "types": ["Vegano"], "open": "11:30", "close": "23:00", "num_photos": 2, "road": "Triângulo", "num": 10, "district": "Praia do Canto", "zip": "29055-000", "city": "Vitória", "lat": -20.3015, "lng": -40.2890},
-                {"owner_email": "owner_b@tasty.com", "trade": "Steakhouse Laranjeiras", "cnpj": "00.000.000/0001-05", "types": ["Churrascaria"], "open": "11:00", "close": "16:00", "num_photos": 4, "road": "Av. Central", "num": 1500, "district": "Laranjeiras", "zip": "29165-130", "city": "Serra", "lat": -20.1985, "lng": -40.2605},
-                {"owner_email": "owner_c@tasty.com", "trade": "Los Tacos", "cnpj": "00.000.000/0001-06", "types": ["Comida Mexicana"], "open": "08:00", "close": "20:00", "num_photos": 5, "road": "Av. Expedito Garcia", "num": 50, "district": "Campo Grande", "zip": "29146-201", "city": "Cariacica", "lat": -20.3540, "lng": -40.3800},
-                {"owner_email": "owner_c@tasty.com", "trade": "Moqueca Raiz", "cnpj": "00.000.000/0001-07", "types": ["Cozinha Brasileira"], "open": "11:00", "close": "17:00", "num_photos": 4, "road": "Navegantes", "num": 800, "district": "Enseada", "zip": "29050-335", "city": "Vitória", "lat": -20.3150, "lng": -40.2905},
-                {"owner_email": "owner_c@tasty.com", "trade": "Habib Arab", "cnpj": "00.000.000/0001-08", "types": ["Comida Árabe"], "open": "10:00", "close": "22:00", "num_photos": 3, "road": "Santa Leopoldina", "num": 300, "district": "Coqueiral", "zip": "29102-041", "city": "Vila Velha", "lat": -20.3590, "lng": -40.3010},
-                {"owner_email": "owner_c@tasty.com", "trade": "Gelato Manguinhos", "cnpj": "00.000.000/0001-09", "types": ["Sorveteria"], "open": "10:00", "close": "18:00", "num_photos": 5, "road": "Atapuã", "num": 25, "district": "Manguinhos", "zip": "29173-025", "city": "Serra", "lat": -20.1850, "lng": -40.1890}
+                {
+                    "owner_email": "owner_a@tasty.com", 
+                    "trade": "Bonna Pizza", 
+                    "cnpj": "00.000.000/0001-01", 
+                    "types": ["Pizzaria"], 
+                    "open": "18:00", 
+                    "close": "23:59", 
+                    "road": "Av. Antônio Gil Veloso", "num": 100, "district": "Praia da Costa", "zip": "29101-010", "city": "Vila Velha", "lat": -20.3297, "lng": -40.2818,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1513104890138-7c749659a591", "desc": "Pizza saindo do forno de pedra"},
+                        {"url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5", "desc": "Ambiente aconchegante da pizzaria artesanal"},
+                        {"url": "https://images.unsplash.com/photo-1590947132387-155cc02f3212", "desc": "Detalhe da nossa Pizza Suprema de Pepperoni"},
+                        {"url": "https://images.unsplash.com/photo-1574085426831-9886e346f0a3", "desc": "Cardápio de vinhos e pizzas da casa"}
+                    ]
+                },
+                {
+                    "owner_email": "owner_a@tasty.com", 
+                    "trade": "Burger Station", 
+                    "cnpj": "00.000.000/0001-02", 
+                    "types": ["Hamburgueria", "Vegano", "Saudável"], 
+                    "open": "18:00", 
+                    "close": "23:00", 
+                    "road": "R. Jair de Andrade", "num": 500, "district": "Itapuã", "zip": "29101-700", "city": "Vila Velha", "lat": -20.3475, "lng": -40.2913,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd", "desc": "Smash burger artesanal com queijo derretido"},
+                        {"url": "https://images.unsplash.com/photo-1550547660-d9450f859349", "desc": "Nosso salão rústico em estilo industrial"},
+                        {"url": "https://images.unsplash.com/photo-1586190848861-99aa4a171e90", "desc": "Opção fit: Burger artesanal no prato com salada"}
+                    ]
+                },
+                {
+                    "owner_email": "owner_b@tasty.com", 
+                    "trade": "Sushi Lounge", 
+                    "cnpj": "00.000.000/0001-03", 
+                    "types": ["Comida Japonesa"], 
+                    "open": "19:00", 
+                    "close": "00:00", 
+                    "road": "Rua da Lama", "num": 120, "district": "Jardim da Penha", "zip": "29060-230", "city": "Vitória", "lat": -20.2925, "lng": -40.2942,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c", "desc": "Combo premium de sushis variados e sashimis"},
+                        {"url": "https://images.unsplash.com/photo-1611143669185-af224c5e3252", "desc": "Balcão do sushiman iluminado com neon"},
+                        {"url": "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56", "desc": "Detalhe de temaki de salmão fresco e maçaricado"},
+                        {"url": "https://images.unsplash.com/photo-1583623025817-d180a2221d0a", "desc": "Entrada charmosa com luminárias orientais"},
+                        {"url": "https://images.unsplash.com/photo-1633478062482-790e3b5dd810", "desc": "Cardápio de combinados tradicionais"}
+                    ]
+                },
+                {
+                    "owner_email": "owner_b@tasty.com", 
+                    "trade": "Vegan Life", 
+                    "cnpj": "00.000.000/0001-04", 
+                    "types": ["Vegano", "Saudável"], 
+                    "open": "11:30", 
+                    "close": "23:00", 
+                    "road": "Triângulo", "num": 10, "district": "Praia do Canto", "zip": "29055-000", "city": "Vitória", "lat": -20.3015, "lng": -40.2890,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd", "desc": "Salada bowl super colorida e 100% plant-based"},
+                        {"url": "https://images.unsplash.com/photo-1540914124281-342587941389", "desc": "Espaço clean repleto de plantas naturais"}
+                    ]
+                },
+                {
+                    "owner_email": "owner_b@tasty.com", 
+                    "trade": "Steakhouse Laranjeiras", 
+                    "cnpj": "00.000.000/0001-05", 
+                    "types": ["Churrascaria"], 
+                    "open": "11:00", 
+                    "close": "16:00", 
+                    "road": "Av. Central", "num": 1500, "district": "Laranjeiras", "zip": "29165-130", "city": "Serra", "lat": -20.1985, "lng": -40.2605,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1544025162-d76694265947", "desc": "Costela premium assada lentamente na brasa"},
+                        {"url": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1", "desc": "Espeto corrido servido direto na mesa do cliente"},
+                        {"url": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092", "desc": "Salão amplo ideal para almoços em família"},
+                        {"url": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b", "desc": "Seleção de cortes nobres cruas em exposição"}
+                    ]
+                },
+                {
+                    "owner_email": "owner_c@tasty.com", 
+                    "trade": "Los Tacos", 
+                    "cnpj": "00.000.000/0001-06", 
+                    "types": ["Comida Mexicana"], 
+                    "open": "08:00", "close": "20:00", 
+                    "road": "Av. Expedito Garcia", "num": 50, "district": "Campo Grande", "zip": "29146-201", "city": "Cariacica", "lat": -20.3540, "lng": -40.3800,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47", "desc": "Tacos crocantes com guacamole e pico de gallo"},
+                        {"url": "https://images.unsplash.com/photo-1624462966581-bc6d768cbce5", "desc": "Burrito gigante recheado cortado ao meio"},
+                        {"url": "https://images.unsplash.com/photo-1514933651103-005eec06c04b", "desc": "Bar temático decorado com caveiras mexicanas"},
+                        {"url": "https://images.unsplash.com/photo-1536184057357-a650177b412e", "desc": "Nossa famosa torre de Nachos com queijo"},
+                        {"url": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624", "desc": "Menu ilustrado de tequilas e margaritas"}
+                    ]
+                },
+                {
+                    "owner_email": "owner_c@tasty.com", 
+                    "trade": "Moqueca Raiz", 
+                    "cnpj": "00.000.000/0001-07", 
+                    "types": ["Cozinha Brasileira", "Frutos do Mar"], 
+                    "open": "11:00", "close": "17:00", 
+                    "road": "Navegantes", "num": 800, "district": "Enseada", "zip": "29050-335", "city": "Vitória", "lat": -20.3150, "lng": -40.2905,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb", "desc": "Moqueca capixaba tradicional fervendo na panela de barro"},
+                        {"url": "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0", "desc": "Bobó de camarão cremoso servido com arroz"},
+                        {"url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4", "desc": "Vista para o mar a partir do salão rústico"},
+                        {"url": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0", "desc": "Mesa posta montada para o festival de frutos do mar"}
+                    ]
+                },
+                {
+                    "owner_email": "owner_c@tasty.com", 
+                    "trade": "Habib Arab", 
+                    "cnpj": "00.000.000/0001-08", 
+                    "types": ["Comida Árabe"], 
+                    "open": "10:00", "close": "22:00", 
+                    "road": "Santa Leopoldina", "num": 300, "district": "Coqueiral", "zip": "29102-041", "city": "Vila Velha", "lat": -20.3590, "lng": -40.3010,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1608897013039-887f21d8c804", "desc": "Prato combinado com hummus, falafel e kafta"},
+                        {"url": "https://images.unsplash.com/photo-1541518763669-27fef04b14ea", "desc": "Lounge árabe reservado com tapetes e almofadas"},
+                        {"url": "https://images.unsplash.com/photo-1565557623262-b51c2513a641", "desc": "Esfihas abertas folheadas saindo do forno"}
+                    ]
+                },
+                {
+                    "owner_email": "owner_c@tasty.com", 
+                    "trade": "Gelato Manguinhos", 
+                    "cnpj": "00.000.000/0001-09", 
+                    "types": ["Sorveteria", "Cafeteria"], 
+                    "open": "10:00", "close": "18:00", 
+                    "road": "Atapuã", "num": 25, "district": "Manguinhos", "zip": "29173-025", "city": "Serra", "lat": -20.1850, "lng": -40.1890,
+                    "photos": [
+                        {"url": "https://images.unsplash.com/photo-1567206563064-6f60f40a2b57", "desc": "Gelatos artesanais cremosos expostos na vitrine"},
+                      #  {"url": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a", "desc": "Taça monumental de sundae com morango"},
+                        {"url": "https://images.unsplash.com/photo-1445116572660-236099ec97a0", "desc": "Nossa bancada charmosa com cafeteria expressa"},
+                       # {"url": "https://images.unsplash.com/photo-1517433456452-f9633a875f6f", "desc": "Espaço externo de frente para a praia"},
+                        {"url": "https://images.unsplash.com/photo-1559925393-8be0ec4767c8", "desc": "Quadro negro com as opções de sabores diários"}
+                    ]
+                }
             ]
 
-            photo_idx = 0
             for b_data in businesses_data:
                 b = Business(
                     corporate_name=f"{b_data['trade']} LTDA", trade_name=b_data['trade'], cnpj=b_data['cnpj'],
@@ -178,10 +282,8 @@ def init_app(app):
                 for t_name in b_data["types"]:
                     b.business_types.append(b_types[t_name])
                 
-                for _ in range(b_data["num_photos"]):
-                    img_url = photo_pool[photo_idx % len(photo_pool)]
-                    b.photos.append(Photo(url=f"{img_url}?auto=format&fit=crop&w=800&q=80", description="Foto"))
-                    photo_idx += 1
+                for photo_info in b_data["photos"]:
+                    b.photos.append(Photo(url=f"{photo_info['url']}?auto=format&fit=crop&w=800&q=80", description=photo_info['desc']))
                 
                 b.addresses.append(Address(road=b_data['road'], number=b_data['num'], district=b_data['district'], zipcode=b_data['zip'], latitude=b_data['lat'], longitude=b_data['lng'], city=cities[b_data['city']]))
                 db.session.add(b)
