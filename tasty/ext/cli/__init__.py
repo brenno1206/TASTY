@@ -66,7 +66,7 @@ def init_app(app):
 
             bt_data = [
                 ("Pizzaria", "Pizzas artesanais", "&#127829;"),
-                ("Hamburgueria", "Burgers e lanches", "&#127816;"),
+                ("Hamburgueria", "Burgers e lanches", "&#127828;"),
                 ("Comida Japonesa", "Sushis e temakis", "&#127843;"),
                 ("Cozinha Brasileira", "Comida caseira", "&#127858;"),
                 ("Cafeteria", "Cafés e doces", "&#9749;"),
