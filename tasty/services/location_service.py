@@ -14,7 +14,6 @@ from tasty.ext.db import db
 def geocode_address(road: str, district: str, zipcode: str, city_name: str = "Vila Velha") -> Tuple[Optional[float], Optional[float]]:
     """
     Converte um endereço físico ou CEP em Latitude e Longitude.
-    Inclui bypass de SSL para compatibilidade com o Python no macOS.
     """
     query_string = ""
     try:
