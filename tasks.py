@@ -115,7 +115,7 @@ def drop_db(c):
     Apaga todas as tabelas do banco de dados.
     """
     load_env("dev")
-    c.run("flask drop-db", env=os.environ.copy(), pty=True)
+    c.run("flask drop-db", env=os.environ.copy())
 
 
 @task
@@ -124,7 +124,7 @@ def create_db(c):
     Cria as tabelas do banco de dados do zero.
     """
     load_env("dev")
-    c.run("flask create-db", env=os.environ.copy(), pty=True)
+    c.run("flask create-db", env=os.environ.copy())
 
 
 @task
@@ -133,7 +133,7 @@ def seed_dev(c):
     Executa o comando de seed garantindo o ambiente de desenvolvimento.
     """
     load_env("dev")
-    c.run("flask seed-dev", env=os.environ.copy(), pty=True)
+    c.run("flask seed-dev", env=os.environ.copy())
 
 
 # ==========================================================
